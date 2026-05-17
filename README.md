@@ -2,6 +2,8 @@
 
 > **Read before you sign. Understand before you agree.**
 
+🔗 **Live Deployment:** [https://nyay-saathi-j4af.vercel.app/](https://nyay-saathi-j4af.vercel.app/)
+
 NyaySaathi is a multi-agent contract intelligence platform that analyzes legal documents, detects harmful clauses, scores risk, explains implications in plain English/Hinglish, and generates negotiation-ready recommendations.
 
 ---
