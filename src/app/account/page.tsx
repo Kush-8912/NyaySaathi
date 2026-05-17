@@ -84,21 +84,72 @@ function AccountContent() {
     }
   }, [user, profile]);
 
+  const compressAndConvertToBase64 = (file: File): Promise<string> => {
+    return new Promise((resolve, reject) => {
+      const reader = new FileReader();
+      reader.readAsDataURL(file);
+      reader.onload = (event) => {
+        const img = new window.Image();
+        img.src = event.target?.result as string;
+        img.onload = () => {
+          const canvas = document.createElement('canvas');
+          const MAX_WIDTH = 120;
+          const MAX_HEIGHT = 120;
+          let width = img.width;
+          let height = img.height;
+
+          if (width > height) {
+            if (width > MAX_WIDTH) {
+              height *= MAX_WIDTH / width;
+              width = MAX_WIDTH;
+            }
+          } else {
+            if (height > MAX_HEIGHT) {
+              width *= MAX_HEIGHT / height;
+              height = MAX_HEIGHT;
+            }
+          }
+          canvas.width = width;
+          canvas.height = height;
+          const ctx = canvas.getContext('2d');
+          ctx?.drawImage(img, 0, 0, width, height);
+          const dataUrl = canvas.toDataURL('image/jpeg', 0.75); // Compress to 75% quality JPEG
+          resolve(dataUrl);
+        };
+        img.onerror = (err) => reject(err);
+      };
+      reader.onerror = (err) => reject(err);
+    });
+  };
+
   const handleAvatarUpload = async (e: React.ChangeEvent<HTMLInputElement>) => {
     const file = e.target.files?.[0];
     if (!file || !user) return;
     if (file.size > 5 * 1024 * 1024) { toast.error('Image must be under 5MB'); return; }
     setUploading(true);
+    
     try {
+      // 1. Try standard Firebase Storage upload
       const { url } = await uploadProfileImage(user.uid, file);
       await updateAuthProfile(user, { photoURL: url });
       await saveProfile({ photoURL: url });
-      toast.success('Profile photo updated!');
-    } catch (error: any) {
-      console.error("Avatar upload error:", error);
-      toast.error('Upload failed — try again');
+      toast.success('Profile photo updated via Cloud Storage!');
+    } catch (storageError) {
+      console.warn("Storage upload failed, falling back to Base64 in Firestore:", storageError);
+      
+      try {
+        // 2. Fallback: Compress and convert to Base64, then store directly in Firestore
+        const base64Url = await compressAndConvertToBase64(file);
+        await updateAuthProfile(user, { photoURL: base64Url });
+        await saveProfile({ photoURL: base64Url });
+        toast.success('Profile photo updated!');
+      } catch (fallbackError) {
+        console.error("Avatar fallback upload error:", fallbackError);
+        toast.error('Upload failed — try again');
+      }
+    } finally {
+      setUploading(false);
     }
-    finally { setUploading(false); }
   };
 
   const handleSave = async () => {
