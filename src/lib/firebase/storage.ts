@@ -14,38 +14,22 @@ export async function uploadFile(uid: string, file: File, folder = 'documents'):
 }
 
 export async function uploadProfileImage(uid: string, file: File): Promise<{ url: string; path: string }> {
-  const path = `users/${uid}/profile/avatar`;
+  // Extract extension from file name or mime-type
+  const ext = file.name.split('.').pop() || 'png';
+  const path = `users/${uid}/profile/avatar.${ext}`;
   const storageRef = ref(storage, path);
   
   return new Promise((resolve, reject) => {
-    const uploadTask = uploadBytesResumable(storageRef, file);
-    
-    // Fallback timeout in case Firebase SDK hangs indefinitely (common with CORS issues)
-    const timeout = setTimeout(() => {
-      uploadTask.cancel();
-      reject(new Error("Upload timed out. This is usually caused by missing Firebase Storage CORS rules or a blocked network."));
-    }, 15000);
-
-    uploadTask.on('state_changed', 
-      (snapshot) => {
-        const progress = (snapshot.bytesTransferred / snapshot.totalBytes) * 100;
-        console.log('Upload is ' + progress + '% done');
-      }, 
-      (error) => {
-        clearTimeout(timeout);
-        console.error("Firebase Storage Error:", error);
+    // Simpler uploadBytes
+    uploadBytes(storageRef, file)
+      .then(async (snapshot) => {
+        const url = await getDownloadURL(snapshot.ref);
+        resolve({ url, path });
+      })
+      .catch((error) => {
+        console.error("Firebase Storage Upload Error:", error);
         reject(error);
-      }, 
-      async () => {
-        clearTimeout(timeout);
-        try {
-          const url = await getDownloadURL(uploadTask.snapshot.ref);
-          resolve({ url, path });
-        } catch (err) {
-          reject(err);
-        }
-      }
-    );
+      });
   });
 }
 
