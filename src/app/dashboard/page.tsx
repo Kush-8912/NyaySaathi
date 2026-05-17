@@ -26,7 +26,7 @@ function DashboardContent() {
 
   const totalAnalyses = analyses.length;
   const avgRisk = totalAnalyses > 0
-    ? Math.round(analyses.reduce((sum, a) => sum + (a.overallScore ?? 0), 0) / totalAnalyses)
+    ? Math.round(analyses.reduce((sum, a) => sum + (a.overallRiskScore ?? 0), 0) / totalAnalyses)
     : 0;
   const criticalCount = analyses.filter(a => a.riskLevel === 'Critical').length;
   const recentFive = analyses.slice(0, 5);

@@ -166,9 +166,9 @@ function HistoryContent() {
                       <span style={{ fontSize: '0.78rem', color: 'var(--text-muted)', display: 'flex', alignItems: 'center', gap: '0.3rem' }}>
                         <Clock size={11} /> {formatDate(analysis.createdAt)}
                       </span>
-                      {analysis.overallScore !== undefined && (
+                      {analysis.overallRiskScore !== undefined && (
                         <span style={{ fontSize: '0.78rem', color: 'var(--text-muted)' }}>
-                          Score: <strong style={{ color: riskColor }}>{analysis.overallScore}/100</strong>
+                          Score: <strong style={{ color: riskColor }}>{analysis.overallRiskScore}/100</strong>
                         </span>
                       )}
                     </div>
@@ -176,7 +176,7 @@ function HistoryContent() {
 
                   {/* Actions */}
                   <div style={{ display: 'flex', alignItems: 'center', gap: '0.5rem', flexShrink: 0 }}>
-                    <button onClick={(e) => { e.stopPropagation(); handleDelete(analysis.id); }} title="Delete"
+                    <button onClick={(e) => { e.stopPropagation(); if (analysis.id) handleDelete(analysis.id); }} title="Delete"
                       style={{ width: 34, height: 34, borderRadius: 9, background: 'transparent', border: '1px solid var(--border-subtle)', display: 'flex', alignItems: 'center', justifyContent: 'center', cursor: 'pointer', color: 'var(--text-muted)', transition: 'all 0.2s ease' }}
                       onMouseEnter={e => { (e.currentTarget as HTMLElement).style.borderColor = '#F87171'; (e.currentTarget as HTMLElement).style.color = '#F87171'; }}
                       onMouseLeave={e => { (e.currentTarget as HTMLElement).style.borderColor = 'var(--border-subtle)'; (e.currentTarget as HTMLElement).style.color = 'var(--text-muted)'; }}>
