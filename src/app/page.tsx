@@ -302,7 +302,7 @@ export default function LandingPage() {
             <div style={{ position: 'absolute', inset: 0, background: 'linear-gradient(135deg, rgba(99,102,241,0.08) 0%, transparent 50%, rgba(249,115,22,0.05) 100%)', pointerEvents: 'none' }} />
             <div style={{ position: 'relative', zIndex: 2 }}>
               <div style={{ width: 64, height: 64, borderRadius: 18, background: 'linear-gradient(135deg, #6366F1, #F97316)', display: 'flex', alignItems: 'center', justifyContent: 'center', margin: '0 auto 1.5rem', boxShadow: '0 0 30px rgba(99,102,241,0.4)' }}>
-                <Shield size={30} color="#fff" />
+                <Scale size={30} color="#fff" />
               </div>
               <h2 style={{ marginBottom: '0.75rem' }}>
                 Your next contract is waiting.<br />
