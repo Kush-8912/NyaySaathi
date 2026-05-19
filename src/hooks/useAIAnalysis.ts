@@ -73,7 +73,7 @@ export function useAIAnalysis(): UseAIAnalysisResult {
         riskLevel: aiResult.riskLevel,
         summary: aiResult.executiveSummary,
         plainEnglishSummary: aiResult.plainEnglishSummary,
-        hinglishSummary: aiResult.hinglishSummary,
+        simpleSummary: aiResult.simpleSummary,
         keyFindings: aiResult.redFlags || [],
         clauseAnalyses: aiResult.clauseAnalyses || [],
         negotiationPlan: aiResult.negotiationPlan || [],

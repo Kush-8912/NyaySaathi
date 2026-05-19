@@ -10,8 +10,8 @@ export const MOCK_EMPLOYMENT_ANALYSIS: AIAnalysisResult = {
     'This employment contract contains several highly exploitative clauses that severely restrict the employee\'s post-employment freedom, vest all intellectual property (including work done outside office hours) in the employer, mandate one-sided arbitration, and allow immediate termination with no compensation. The overall risk to the employee is Critical.',
   plainEnglishSummary:
     'This contract is heavily one-sided in favor of the employer. You are agreeing to a 24-month non-compete that prevents you from working in your industry anywhere in India or internationally. The company will own everything you create — including personal projects done at home. If you have a dispute, only the company gets to choose the arbitrator. You can be fired immediately with no notice and no pending dues.',
-  hinglishSummary:
-    'Yeh contract bahut zyada employer ke favour mein hai. Aap agree kar rahe hain ki aap 24 mahine tak India ya kisi bhi desh mein kisi bhi competing company mein kaam nahi karenge. Ghar mein bhi agar kuch banate hain — woh bhi company ka hoga. Agar koi dispute hua toh arbitrator bhi company choose karegi. Aur company chahe toh aapko bina notice ke kal hi nikaalsakte hain.',
+  simpleSummary:
+    'This contract is extremely one-sided in favor of the employer. You are agreeing to a 24-month non-compete that blocks you from working in your industry anywhere in India or globally. Even personal projects done at home belong to the company. If there is a dispute, the company picks the arbitrator. And they can fire you without notice and keep your pending salary.',
   topRisks: [
     {
       title: '24-Month Non-Compete Clause',
@@ -60,8 +60,8 @@ export const MOCK_EMPLOYMENT_ANALYSIS: AIAnalysisResult = {
       },
       plainExplanation:
         'For 24 months after you leave this job — for any reason — you cannot work for any company that competes with your employer, anywhere in the world. This is an extremely broad restriction that could make you unemployable in your own industry.',
-      hinglishExplanation:
-        'Jab aap yeh job chhod denge — chahe resign karein ya nikale jaayein — agle 24 mahine tak aap koi bhi aise company mein kaam nahi kar sakte jo is company se compete kare, chahe woh India mein ho ya abroad. Yeh bahut risky hai kyunki aapka poora career 2 saal ke liye stuck ho sakta hai.',
+      simpleExplanation:
+        'Once you leave this job — whether you quit or get fired — you cannot work for any competing company for the next 24 months, anywhere in the world. This is extremely risky because your entire career could be stuck for 2 full years.',
       hiddenRisk:
         'The clause does not define what "competing business" means. Your employer can claim any adjacent company is a competitor and use this to block your career moves.',
       possibleWorstCase:
@@ -97,8 +97,8 @@ export const MOCK_EMPLOYMENT_ANALYSIS: AIAnalysisResult = {
       },
       plainExplanation:
         'The company owns EVERYTHING you create — not just work done during office hours, but also personal projects, apps, blogs, or inventions you create at home on your own time using your own computer.',
-      hinglishExplanation:
-        'Iska matlab hai ki aap ghar mein jo bhi banate hain — koi app, koi design, koi invention — sab company ka hoga. Sirf office hours ka kaam nahi, "outside working hours" bhi. Yeh aapki creative freedom aur future projects ke liye bahut bada khatra hai.',
+      simpleExplanation:
+        'This means everything you create — any app, any design, any invention — even at home, belongs to the company. Not just office work, but "outside working hours" too. This is a huge threat to your creative freedom and future projects.',
       hiddenRisk:
         'No exception is carved out for personal projects unrelated to the company\'s business. This could extend to creative work, music, art, or startups you might want to launch independently.',
       possibleWorstCase:
@@ -133,8 +133,8 @@ export const MOCK_EMPLOYMENT_ANALYSIS: AIAnalysisResult = {
       },
       plainExplanation:
         'If any disagreement arises — salary disputes, wrongful termination, unpaid dues — you cannot go to court. You must go through arbitration, and the company gets to choose who the arbitrator is. This is like letting the opposing team pick the referee.',
-      hinglishExplanation:
-        'Agar koi bhi problem ho — salary nahi mili, wrongful termination hua, koi bhi issue — aap court nahi ja sakte. Arbitration karni padegi, aur arbitrator company choose karegi. Yeh bilkul aisa hai jaise match mein dusri team referee choose kare — fair nahi hai.',
+      simpleExplanation:
+        'If any problem arises — unpaid salary, wrongful termination, any issue — you cannot go to court. You must go through arbitration, and the company chooses the arbitrator. It is like letting the opposing team pick the referee — completely unfair.',
       hiddenRisk:
         'Arbitration is typically confidential and costly. You may not be able to afford it, effectively denying you justice. Company-chosen arbitrators are statistically more likely to favor the company.',
       possibleWorstCase:
@@ -169,8 +169,8 @@ export const MOCK_EMPLOYMENT_ANALYSIS: AIAnalysisResult = {
       },
       plainExplanation:
         'The company can fire you instantly, at any time, for any reason — and you lose all pending salary, bonuses, and dues. This removes your most basic job security.',
-      hinglishExplanation:
-        'Company aapko kisi bhi waqt, bina kisi reason ke, immediately nikaalsakte hain — aur aapki pending salary, bonus, sab kuch forfeit ho jaayegi. Matlab kal aayein aur wapas jaayein bina paisa liye.',
+      simpleExplanation:
+        'The company can fire you at any time, for any reason, with immediate effect — and your pending salary, bonus, everything gets forfeited. Essentially, you could show up tomorrow and be sent home with nothing.',
       hiddenRisk:
         'Forfeiture of pending dues may include unpaid salary, performance bonuses, expense reimbursements, or provident fund contributions — potentially significant financial loss.',
       possibleWorstCase:
@@ -205,8 +205,8 @@ export const MOCK_EMPLOYMENT_ANALYSIS: AIAnalysisResult = {
       },
       plainExplanation:
         'For 5 years after leaving the company, you cannot share "any company information" with anyone. The term "any company information" is dangerously vague — it could include things you casually know from working there.',
-      hinglishExplanation:
-        'Job chhod ne ke baad bhi 5 saal tak aap koi bhi company information kisi ko nahi bata sakte. "Any company information" bahut broad term hai — iska matlab ho sakta hai ki aap apne kaam ka experience bhi share karna mushkil ho jaaye.',
+      simpleExplanation:
+        'Even after leaving the job, you cannot share any company information with anyone for 5 years. "Any company information" is an extremely broad term — it could mean you cannot even share your work experience easily.',
       hiddenRisk:
         '"Any company information" is undefined. This could prevent you from listing projects on your resume, discussing your work in interviews, or publishing case studies — all normal professional activities.',
       possibleWorstCase:
@@ -348,8 +348,8 @@ export const MOCK_RENTAL_ANALYSIS: AIAnalysisResult = {
     'This rental agreement gives the landlord sweeping powers to terminate without notice and forfeit the entire security deposit for minor issues. The tenant has almost no protections. Multiple clauses are one-sided and potentially illegal under the Model Tenancy Act.',
   plainEnglishSummary:
     'This rental agreement is heavily unfair to you as a tenant. The landlord can ask you to leave at any moment without any warning. Even a tiny scratch on a wall or a single day\'s delay in rent can cause you to lose your entire security deposit. You have very few rights under this agreement.',
-  hinglishSummary:
-    'Yeh rental agreement aapke liye bahut risky hai. Landlord kabhi bhi, bina bataye, aapko nikaalsakte hain. Ek chhoti si damage ya ek din ki late rent — aur poora security deposit chala jaayega. Yeh bilkul fair nahi hai, aur India ke Model Tenancy Act ke against bhi ho sakta hai.',
+  simpleSummary:
+    'This rental agreement is very risky for you as a tenant. The landlord can evict you at any time without any notice. Even a small scratch or one day of late rent — and your entire security deposit is gone. This is completely unfair and may even violate India\'s Model Tenancy Act.',
   topRisks: [
     {
       title: 'Arbitrary Termination Without Notice',
@@ -387,7 +387,7 @@ export const MOCK_RENTAL_ANALYSIS: AIAnalysisResult = {
         ambiguity: 30,
       },
       plainExplanation: 'The landlord can kick you out at literally any time with zero warning. You have no security of tenure.',
-      hinglishExplanation: 'Landlord aapko aaj raat bhi nikaalsakte hain — bina koi notice diye. Aapke paas koi protection nahi hai. Yeh India ke Model Tenancy Act 2021 ke guidelines ke bilkul khilaf hai.',
+      simpleExplanation: 'The landlord can evict you tonight — without giving any notice. You have no protection whatsoever. This directly violates the guidelines of India\'s Model Tenancy Act 2021.',
       hiddenRisk: 'This is likely unenforceable under Indian law, but enforcing your rights requires legal action — expensive and stressful.',
       possibleWorstCase: 'Landlord sells the property or has a personal dispute with you. You receive a verbal eviction notice and must find new accommodation within 24 hours.',
       isOneSided: true,
@@ -416,7 +416,7 @@ export const MOCK_RENTAL_ANALYSIS: AIAnalysisResult = {
         ambiguity: 80,
       },
       plainExplanation: 'If you accidentally damage anything (even slightly) or pay rent even one day late, you lose your entire security deposit — potentially several months of rent.',
-      hinglishExplanation: 'Ek paint scratch ya ek din ki late EMI — aur aapka poora security deposit (jo ki ₹50,000 ya zyada bhi ho sakta hai) jaata rahega. "Minor damage" define bhi nahi hai — landlord kuch bhi minor call kar sakte hain.',
+      simpleExplanation: 'A single paint scratch or one day of late rent — and your entire security deposit (which could be ₹50,000 or more) is gone. "Minor damage" is not even defined — the landlord can call anything minor.',
       hiddenRisk: '"Minor damage" is undefined, giving the landlord unlimited discretion to claim forfeiture.',
       possibleWorstCase: 'A screw hole in the wall from hanging a picture frame is declared "minor damage." Your ₹1,20,000 deposit is retained.',
       isOneSided: true,

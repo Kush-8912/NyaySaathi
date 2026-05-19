@@ -27,7 +27,7 @@ Perform the following using your six internal expert agents:
 
 3. ADVERSARIAL REASONING AGENT: Think like the stronger party. Identify: how each clause could be weaponized against the user, what worst-case scenario exists, what hidden obligations are present, what is missing, what is one-sided.
 
-4. PLAIN LANGUAGE EXPLAINER AGENT: Explain each clause in plain English suitable for a non-lawyer. If preferredLanguage is Hinglish, also write a Hinglish explanation mixing Hindi and English naturally (like "Yeh clause aapke liye bahut risky hai because...").
+4. PLAIN LANGUAGE EXPLAINER AGENT: Explain each clause in plain English suitable for a non-lawyer. Also provide a simplified explanation using everyday language that anyone can understand.
 
 5. NEGOTIATION COACH AGENT: For each problematic clause, suggest better wording, what to ask before signing, and negotiation strategy. Prioritize negotiation points.
 
@@ -39,7 +39,7 @@ IMPORTANT RULES:
 - Focus on real impact to the ${perspective}.
 - Identify missing protections that the ${perspective} should have.
 - Highlight one-sidedness and ambiguity clearly.
-- For Hinglish: mix Hindi and English naturally, don't just translate word-for-word.
+- Keep all explanations in clear, accessible English.
 - Include at least 3-5 clause analyses.
 - Include at least 2 scenario simulations.
 - Include at least 3 negotiation points.
@@ -56,7 +56,7 @@ Return EXACTLY this JSON structure (fill all fields):
   "riskLevel": "Low | Medium | High | Critical",
   "executiveSummary": "2-3 sentence summary of the overall contract risk",
   "plainEnglishSummary": "Plain English paragraph explaining what this contract means for the user",
-  "hinglishSummary": "Hinglish paragraph mixing Hindi and English",
+  "simpleSummary": "Simplified everyday English summary for quick understanding",
   "topRisks": [
     {
       "title": "",
@@ -85,7 +85,7 @@ Return EXACTLY this JSON structure (fill all fields):
         "ambiguity": 0
       },
       "plainExplanation": "",
-      "hinglishExplanation": "",
+      "simpleExplanation": "",
       "hiddenRisk": "",
       "possibleWorstCase": "",
       "isOneSided": true,

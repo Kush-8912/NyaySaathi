@@ -29,7 +29,7 @@ export const USER_PERSPECTIVES: UserPerspective[] = [
   'Individual User',
 ];
 
-export const PREFERRED_LANGUAGES = ['English', 'Simple English', 'Hinglish'];
+export const PREFERRED_LANGUAGES = ['English', 'Simple English'];
 
 export const USER_TYPES = [
   'Student',
@@ -60,7 +60,7 @@ export const AGENT_STEPS = [
   { key: 'extract', label: 'Extracting Clauses', description: 'Identifying key legal provisions...' },
   { key: 'classify', label: 'Classifying Risk Categories', description: 'Mapping clauses to risk dimensions...' },
   { key: 'adversarial', label: 'Adversarial Reasoning', description: 'Simulating worst-case scenarios...' },
-  { key: 'explain', label: 'Generating Explanations', description: 'Creating plain English & Hinglish summaries...' },
+  { key: 'explain', label: 'Generating Explanations', description: 'Creating plain English summaries...' },
   { key: 'negotiate', label: 'Building Negotiation Plan', description: 'Crafting recommended changes...' },
   { key: 'report', label: 'Compiling Report', description: 'Assembling structured risk intelligence...' },
 ];

@@ -59,7 +59,7 @@ function AnalyzeContent() {
   const [fileName, setFileName] = useState('');
   const [contractType, setContractType] = useState<ContractType>('Employment');
   const [perspective, setPerspective] = useState<UserPerspective>('Employee');
-  const [preferredLanguage, setPreferredLanguage] = useState('Hinglish');
+  const [preferredLanguage, setPreferredLanguage] = useState('English');
   const [extracting, setExtracting] = useState(false);
   const [extractError, setExtractError] = useState('');
   const [isDragOver, setIsDragOver] = useState(false);
@@ -181,9 +181,9 @@ function AnalyzeContent() {
                   style={{ position: 'absolute', inset: 0, opacity: 0, width: '100%', cursor: 'pointer' }} />
                 <Upload size={36} color="var(--text-muted)" style={{ margin: '0 auto 0.75rem' }} />
                 <p style={{ fontWeight: 700, color: 'var(--text-secondary)', marginBottom: '0.25rem' }}>
-                  PDF, DOCX ya TXT yahan drop karo
+                  Drop your PDF, DOCX, or TXT file here
                 </p>
-                <p style={{ fontSize: '0.8rem', color: 'var(--text-muted)' }}>ya click karke browse karo — max {MAX_FILE_SIZE_MB}MB</p>
+                <p style={{ fontSize: '0.8rem', color: 'var(--text-muted)' }}>or click to browse — max {MAX_FILE_SIZE_MB}MB</p>
                 {extracting && <p style={{ color: '#818CF8', fontSize: '0.82rem', marginTop: '0.75rem' }}>⚡ Extracting text...</p>}
                 {fileName && !extracting && <p style={{ color: '#34D399', fontSize: '0.82rem', marginTop: '0.75rem' }}>✓ {fileName}</p>}
                 {extractError && <p style={{ color: '#F87171', fontSize: '0.82rem', marginTop: '0.75rem' }}>{extractError}</p>}

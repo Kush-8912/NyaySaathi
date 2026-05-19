@@ -7,7 +7,7 @@ export type UserType =
   | 'Business Owner'
   | 'Other';
 
-export type PreferredLanguage = 'English' | 'Simple English' | 'Hinglish';
+export type PreferredLanguage = 'English' | 'Simple English';
 
 export interface UserProfile {
   uid: string;

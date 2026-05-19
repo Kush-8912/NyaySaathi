@@ -39,7 +39,7 @@ export interface ClauseAnalysis {
   riskScore: number;
   riskDimensions: RiskDimensions;
   plainExplanation: string;
-  hinglishExplanation: string;
+  simpleExplanation: string;
   hiddenRisk: string;
   possibleWorstCase: string;
   isOneSided: boolean;
@@ -81,7 +81,7 @@ export interface AIAnalysisResult {
   riskLevel: RiskLevel;
   executiveSummary: string;
   plainEnglishSummary: string;
-  hinglishSummary: string;
+  simpleSummary: string;
   topRisks: TopRisk[];
   clauseAnalyses: ClauseAnalysis[];
   missingProtections: string[];
@@ -106,7 +106,7 @@ export interface StoredAnalysis {
   riskLevel: RiskLevel;
   summary: string;
   plainEnglishSummary: string;
-  hinglishSummary: string;
+  simpleSummary: string;
   keyFindings: string[];
   clauseAnalyses: ClauseAnalysis[];
   negotiationPlan: NegotiationPoint[];
