@@ -253,7 +253,7 @@ button { cursor: pointer; font-family: 'Outfit', sans-serif; font-weight: 600; }
 }
 
 .glass-card:hover {
-  transform: translateY(-3px);
+  transform: translateY(-5px);
   border-color: var(--border-accent);
   box-shadow: var(--shadow-md), var(--shadow-indigo);
 }
@@ -372,8 +372,8 @@ button { cursor: pointer; font-family: 'Outfit', sans-serif; font-weight: 600; }
 }
 .agent-card:hover {
   transform: translateY(-5px);
-  border-color: rgba(79,70,229,0.3);
-  box-shadow: var(--shadow-md), 0 0 0 3px rgba(79,70,229,0.06);
+  border-color: var(--border-accent);
+  box-shadow: var(--shadow-md), var(--shadow-indigo);
 }
 .agent-card::before {
   content: '';
@@ -393,11 +393,12 @@ button { cursor: pointer; font-family: 'Outfit', sans-serif; font-weight: 600; }
   border-radius: var(--radius-lg);
   padding: 1.5rem;
   box-shadow: var(--shadow-sm);
-  transition: transform 0.25s var(--ease-spring), box-shadow 0.25s ease;
+  transition: transform 0.25s var(--ease-spring), border-color 0.25s ease, box-shadow 0.25s ease;
 }
 .stat-card:hover {
-  transform: translateY(-3px);
-  box-shadow: var(--shadow-md);
+  transform: translateY(-5px);
+  border-color: var(--border-accent);
+  box-shadow: var(--shadow-md), var(--shadow-indigo);
 }
 
 /* ─── SECTION TITLES ─────────────────────────────────────────── */
