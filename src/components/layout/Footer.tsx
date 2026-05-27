@@ -23,7 +23,7 @@ const footerLinks = {
 
 export default function Footer() {
   return (
-    <footer style={{ borderTop: '1px solid var(--border-subtle)', background: 'rgba(8,8,15,0.6)', backdropFilter: 'blur(20px)', marginTop: '2rem' }}>
+    <footer style={{ borderTop: '1px solid var(--border-default)', background: 'var(--footer-bg)', marginTop: '2rem' }}>
       <div className="container" style={{ padding: '4rem 1.5rem 2rem' }}>
         <div style={{ display: 'grid', gridTemplateColumns: '2fr 1fr 1fr 1fr', gap: '3rem', marginBottom: '3rem' }}>
           {/* Brand */}
@@ -32,7 +32,7 @@ export default function Footer() {
               <div style={{ width: 32, height: 32, borderRadius: 9, background: 'linear-gradient(135deg, #6366F1, #F97316)', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
                 <Scale size={15} color="#fff" />
               </div>
-              <span style={{ fontFamily: "'Rozha One', serif", background: 'linear-gradient(135deg, #818CF8, #FB923C)', WebkitBackgroundClip: 'text', WebkitTextFillColor: 'transparent', backgroundClip: 'text', fontSize: '1.1rem' }}>
+              <span style={{ fontFamily: "'Rozha One', serif", backgroundImage: 'linear-gradient(135deg, #4F46E5, #E8650A)', WebkitBackgroundClip: 'text', WebkitTextFillColor: 'transparent', backgroundClip: 'text', fontSize: '1.1rem' }}>
                 {APP_NAME}
               </span>
             </div>

@@ -71,8 +71,8 @@ export default function LandingPage() {
 
       {/* ═══ HERO ══════════════════════════════════════════ */}
       <section className="hero-section">
-        <div className="hero-orb" style={{ width: 600, height: 600, top: '0%', left: '-5%', background: 'rgba(99,102,241,0.18)', animationDelay: '0s' }} />
-        <div className="hero-orb" style={{ width: 500, height: 500, bottom: '-10%', right: '-5%', background: 'rgba(249,115,22,0.12)', animationDelay: '3s' }} />
+        <div className="hero-orb" style={{ width: 600, height: 600, top: '0%', left: '-5%', background: 'rgba(79,70,229,0.10)', animationDelay: '0s' }} />
+        <div className="hero-orb" style={{ width: 500, height: 500, bottom: '-10%', right: '-5%', background: 'rgba(232,101,10,0.08)', animationDelay: '3s' }} />
 
         <div style={{ position: 'relative', zIndex: 2, textAlign: 'center', maxWidth: 820, padding: '0 1.5rem', margin: '0 auto' }}>
           <motion.div initial={{ opacity: 0, y: 20 }} animate={{ opacity: 1, y: 0 }} transition={{ delay: 0.1 }}>
@@ -119,7 +119,7 @@ export default function LandingPage() {
       </section>
 
       {/* ═══ TICKER ══════════════════════════════════════════ */}
-      <div style={{ overflow: 'hidden', borderTop: '1px solid var(--border-subtle)', borderBottom: '1px solid var(--border-subtle)', padding: '0.8rem 0', background: 'rgba(99,102,241,0.05)' }}>
+      <div style={{ overflow: 'hidden', borderTop: '1px solid var(--border-subtle)', borderBottom: '1px solid var(--border-subtle)', padding: '0.8rem 0', background: 'rgba(79,70,229,0.04)' }}>
         <div style={{ display: 'flex', gap: '3rem', animation: 'marquee 30s linear infinite', willChange: 'transform' }}>
           {[...Array(2)].flatMap(() =>
             ['⚖️ Employment Offer Letter', '🏠 Rent Agreement', '💼 Freelance Contract', '📱 SaaS Subscription', '🔏 NDA / Secrecy Agreement', '🤝 Partnership Deed', '🏢 Vendor Agreement', '📋 Service Agreement', '🎓 Internship Letter', "🔑 Founder's Agreement"]

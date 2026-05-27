@@ -19,7 +19,7 @@ const fadeUp = (delay = 0) => ({
 
 const inputStyle: React.CSSProperties = {
   width: '100%',
-  background: 'rgba(255,255,255,0.05)',
+  background: 'var(--bg-surface)',
   border: '1.5px solid var(--border-default)',
   borderRadius: 10,
   color: 'var(--text-primary)',

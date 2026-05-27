@@ -131,12 +131,12 @@ function DashboardContent() {
                       <div className="glass-card"
                         style={{ padding: '1rem 1.25rem', display: 'flex', alignItems: 'center', gap: '1rem', transition: 'all 0.2s ease' }}
                         onMouseEnter={e => {
-                          (e.currentTarget as HTMLElement).style.background = 'rgba(255,255,255,0.05)';
-                          (e.currentTarget as HTMLElement).style.borderColor = 'rgba(99,102,241,0.3)';
+                          (e.currentTarget as HTMLElement).style.background = 'rgba(79,70,229,0.04)';
+                          (e.currentTarget as HTMLElement).style.borderColor = 'rgba(79,70,229,0.2)';
                         }}
                         onMouseLeave={e => {
-                          (e.currentTarget as HTMLElement).style.background = 'rgba(255,255,255,0.03)';
-                          (e.currentTarget as HTMLElement).style.borderColor = 'var(--border-subtle)';
+                          (e.currentTarget as HTMLElement).style.background = 'var(--bg-card)';
+                          (e.currentTarget as HTMLElement).style.borderColor = 'var(--border-default)';
                         }}
                       >
                         <div style={{ width: 44, height: 44, borderRadius: 12, background: 'rgba(99,102,241,0.1)', border: '1px solid rgba(99,102,241,0.2)', display: 'flex', alignItems: 'center', justifyContent: 'center', flexShrink: 0 }}>
@@ -219,9 +219,9 @@ function DashboardContent() {
                 ].map(link => {
                   const Icon = link.icon;
                   return (
-                    <Link key={link.href} href={link.href} style={{ display: 'flex', alignItems: 'center', gap: '0.6rem', padding: '0.6rem 0.75rem', borderRadius: 10, background: 'rgba(255,255,255,0.03)', border: '1px solid var(--border-subtle)', color: 'var(--text-secondary)', textDecoration: 'none', fontSize: '0.875rem', fontWeight: 600, transition: 'all 0.2s ease' }}
-                      onMouseEnter={e => { (e.currentTarget as HTMLElement).style.background = 'rgba(99,102,241,0.08)'; (e.currentTarget as HTMLElement).style.borderColor = 'rgba(99,102,241,0.25)'; (e.currentTarget as HTMLElement).style.color = '#818CF8'; }}
-                      onMouseLeave={e => { (e.currentTarget as HTMLElement).style.background = 'rgba(255,255,255,0.03)'; (e.currentTarget as HTMLElement).style.borderColor = 'var(--border-subtle)'; (e.currentTarget as HTMLElement).style.color = 'var(--text-secondary)'; }}>
+                    <Link key={link.href} href={link.href} style={{ display: 'flex', alignItems: 'center', gap: '0.6rem', padding: '0.6rem 0.75rem', borderRadius: 10, background: 'var(--bg-hover)', border: '1px solid var(--border-subtle)', color: 'var(--text-secondary)', textDecoration: 'none', fontSize: '0.875rem', fontWeight: 600, transition: 'all 0.2s ease' }}
+                      onMouseEnter={e => { (e.currentTarget as HTMLElement).style.background = 'rgba(79,70,229,0.06)'; (e.currentTarget as HTMLElement).style.borderColor = 'rgba(79,70,229,0.2)'; (e.currentTarget as HTMLElement).style.color = 'var(--indigo)'; }}
+                      onMouseLeave={e => { (e.currentTarget as HTMLElement).style.background = 'var(--bg-hover)'; (e.currentTarget as HTMLElement).style.borderColor = 'var(--border-subtle)'; (e.currentTarget as HTMLElement).style.color = 'var(--text-secondary)'; }}>
                       <Icon size={15} /> {link.label}
                     </Link>
                   );
