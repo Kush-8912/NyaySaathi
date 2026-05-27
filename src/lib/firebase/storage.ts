@@ -14,23 +14,22 @@ export async function uploadFile(uid: string, file: File, folder = 'documents'):
 }
 
 export async function uploadProfileImage(uid: string, file: File): Promise<{ url: string; path: string }> {
-  // Extract extension from file name or mime-type
   const ext = file.name.split('.').pop() || 'png';
   const path = `users/${uid}/profile/avatar.${ext}`;
   const storageRef = ref(storage, path);
-  
-  return new Promise((resolve, reject) => {
-    // Simpler uploadBytes
-    uploadBytes(storageRef, file)
-      .then(async (snapshot) => {
-        const url = await getDownloadURL(snapshot.ref);
-        resolve({ url, path });
-      })
-      .catch((error) => {
-        console.error("Firebase Storage Upload Error:", error);
-        reject(error);
-      });
-  });
+
+  const timeout = new Promise<never>((_, reject) =>
+    setTimeout(() => reject(new Error('Storage upload timed out after 10s')), 10000)
+  );
+
+  try {
+    const snapshot = await Promise.race([uploadBytes(storageRef, file), timeout]);
+    const url = await getDownloadURL(snapshot.ref);
+    return { url, path };
+  } catch (error) {
+    console.warn('Firebase Storage upload failed (will use Base64 fallback):', error);
+    throw error;
+  }
 }
 
 export async function deleteFile(path: string) {

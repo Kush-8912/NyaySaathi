@@ -40,7 +40,7 @@ export async function analyzeContract(
   try {
     if (!genAI) throw new Error('Gemini API key not configured');
 
-    const model = genAI.getGenerativeModel({ model: 'gemini-1.5-flash' });
+    const model = genAI.getGenerativeModel({ model: 'gemini-2.5-flash' });
     const prompt = buildAnalysisPrompt(safeText, contractType, perspective, preferredLanguage);
 
     const response = await model.generateContent(prompt);
@@ -62,5 +62,48 @@ export async function analyzeContract(
     if (onProgress) onProgress('report', 'Using demo analysis...');
     console.error('AI analysis failed:', err);
     return { result: getMockAnalysis(contractType), usedMock: true };
+  }
+}
+
+// ─── Legal Tip of the Day ────────────────────────────────────────────────────
+
+const FALLBACK_TIPS = [
+  '🔍 Non-compete clauses over 12 months are often unenforceable in India — always check the duration.',
+  '⚖️ One-sided arbitration clauses — where one party picks the arbitrator — are a major red flag. Negotiate.',
+  '💡 IP clauses covering "ideas conceived outside work hours" are increasingly challenged in Indian courts.',
+  '🔐 Auto-renewal clauses with 30+ day notice windows are a common trap. Flag them before signing.',
+  '📝 Missing termination-for-cause definitions? That leaves you exposed to arbitrary firing.',
+];
+
+export async function fetchLegalTip(): Promise<string> {
+  if (!genAI) {
+    return FALLBACK_TIPS[Math.floor(Math.random() * FALLBACK_TIPS.length)];
+  }
+
+  try {
+    const model = genAI.getGenerativeModel({ model: 'gemini-2.5-flash' });
+    const prompt = `You are NyaySaathi, an AI legal assistant specialised in Indian contract law.
+
+Generate exactly ONE practical legal tip for someone reviewing or signing contracts in India today.
+The tip should be:
+- Specific to Indian law (mention relevant acts, sections, or Indian court trends where helpful)
+- Actionable and immediately useful
+- 1–2 sentences max (under 60 words)
+- Written in plain English (no legalese)
+- Start with a relevant emoji
+
+Respond with ONLY the tip text — no title, no label, no extra text.`;
+
+    const response = await model.generateContent(prompt);
+    const tip = response.response.text().trim();
+
+    // Safety: if the response looks malformed return a fallback
+    if (!tip || tip.length < 20 || tip.length > 400) {
+      throw new Error('Unexpected tip format');
+    }
+    return tip;
+  } catch (err) {
+    console.warn('fetchLegalTip failed, using fallback:', err);
+    return FALLBACK_TIPS[Math.floor(Math.random() * FALLBACK_TIPS.length)];
   }
 }

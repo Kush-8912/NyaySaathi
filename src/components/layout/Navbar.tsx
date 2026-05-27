@@ -3,8 +3,9 @@ import Link from 'next/link';
 import { usePathname, useRouter } from 'next/navigation';
 import { useState } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
-import { Scale, Menu, X, LogOut, LayoutDashboard, FileSearch, History, BarChart3, User } from 'lucide-react';
+import { Scale, Menu, X, LogOut, LayoutDashboard, FileSearch, History, BarChart3 } from 'lucide-react';
 import { useAuth } from '@/hooks/useAuth';
+import { useUserProfile } from '@/hooks/useUserProfile';
 import { logout } from '@/lib/firebase/auth';
 import { toast } from 'sonner';
 
@@ -17,6 +18,7 @@ const navLinks = [
 
 export default function Navbar() {
   const { user } = useAuth();
+  const { profile } = useUserProfile(user?.uid ?? null);
   const pathname = usePathname();
   const router = useRouter();
   const [mobileOpen, setMobileOpen] = useState(false);
@@ -29,6 +31,8 @@ export default function Navbar() {
 
   const isPublicPage = ['/', '/login', '/signup', '/forgot-password'].includes(pathname);
   const initials = (user?.displayName || user?.email || 'U')[0].toUpperCase();
+  // Prefer Firestore profile photo (covers Base64 uploads) over Firebase Auth photoURL
+  const photoURL = profile?.photoURL || user?.photoURL || '';
 
   return (
     <header className="navbar">
@@ -74,8 +78,11 @@ export default function Navbar() {
           {user ? (
             <>
               <Link href="/account" style={{ display: 'flex', alignItems: 'center', gap: '0.5rem', padding: '0.4rem 0.75rem', borderRadius: 10, textDecoration: 'none', color: 'var(--text-muted)', fontSize: '0.85rem', border: '1px solid var(--border-subtle)' }}>
-                <div style={{ width: 26, height: 26, borderRadius: '50%', background: 'linear-gradient(135deg, #6366F1, #F97316)', display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: '0.7rem', fontWeight: 700, color: '#fff' }}>
-                  {initials}
+                <div style={{ width: 26, height: 26, borderRadius: '50%', background: 'linear-gradient(135deg, #6366F1, #F97316)', display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: '0.7rem', fontWeight: 700, color: '#fff', overflow: 'hidden', flexShrink: 0 }}>
+                  {photoURL
+                    ? <img src={photoURL} alt="avatar" style={{ width: '100%', height: '100%', objectFit: 'cover' }} />
+                    : initials
+                  }
                 </div>
               </Link>
               <button onClick={handleLogout} style={{ display: 'flex', alignItems: 'center', gap: '0.4rem', padding: '0.45rem 0.9rem', borderRadius: 10, background: 'transparent', border: '1px solid var(--border-subtle)', color: 'var(--text-muted)', fontSize: '0.85rem', cursor: 'pointer', fontFamily: "'Outfit', sans-serif", transition: 'color 0.2s ease, border-color 0.2s ease' }}

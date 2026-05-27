@@ -126,26 +126,28 @@ function AccountContent() {
     const file = e.target.files?.[0];
     if (!file || !user) return;
     if (file.size > 5 * 1024 * 1024) { toast.error('Image must be under 5MB'); return; }
+    // Reset input so the same file can be re-selected after an error
+    e.target.value = '';
     setUploading(true);
-    
+
     try {
-      // 1. Try standard Firebase Storage upload
+      // 1. Try Firebase Storage → store HTTPS URL in both Auth + Firestore
       const { url } = await uploadProfileImage(user.uid, file);
       await updateAuthProfile(user, { photoURL: url });
       await saveProfile({ photoURL: url });
-      toast.success('Profile photo updated via Cloud Storage!');
+      toast.success('Profile photo updated!');
     } catch (storageError) {
-      console.warn("Storage upload failed, falling back to Base64 in Firestore:", storageError);
-      
+      console.warn('Storage upload failed, using Base64 fallback:', storageError);
+
       try {
-        // 2. Fallback: Compress and convert to Base64, then store directly in Firestore
+        // 2. Fallback: compress → Base64 → Firestore only
+        // (Firebase Auth rejects data: URLs, so we skip updateAuthProfile here)
         const base64Url = await compressAndConvertToBase64(file);
-        await updateAuthProfile(user, { photoURL: base64Url });
         await saveProfile({ photoURL: base64Url });
         toast.success('Profile photo updated!');
       } catch (fallbackError) {
-        console.error("Avatar fallback upload error:", fallbackError);
-        toast.error('Upload failed — try again');
+        console.error('Base64 fallback also failed:', fallbackError);
+        toast.error('Upload failed — please try again');
       }
     } finally {
       setUploading(false);
@@ -179,7 +181,8 @@ function AccountContent() {
     } finally { setChangingPw(false); }
   };
 
-  const photoURL = user?.photoURL || '';
+  // Prefer Firestore profile photo (covers Base64 fallback) over Firebase Auth photoURL
+  const photoURL = profile?.photoURL || user?.photoURL || '';
   const initials = (user?.displayName || user?.email || 'U')[0].toUpperCase();
 
   return (

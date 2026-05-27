@@ -1,12 +1,14 @@
 'use client';
+import { useState } from 'react';
 import { motion } from 'framer-motion';
 import Link from 'next/link';
 import ProtectedRoute from '@/components/layout/ProtectedRoute';
 import { useAuth } from '@/hooks/useAuth';
 import { useAnalyses } from '@/hooks/useAnalyses';
+import { useLegalTip, fetchLegalTipFromAPI } from '@/hooks/useLegalTip';
 import {
   FileSearch, TrendingUp, Shield, AlertTriangle, Clock,
-  ArrowRight, BarChart3, Plus, CheckCircle,
+  ArrowRight, BarChart3, Plus, CheckCircle, RefreshCw,
 } from 'lucide-react';
 
 const fadeUp = (delay = 0) => ({
@@ -31,14 +33,18 @@ function DashboardContent() {
   const criticalCount = analyses.filter(a => a.riskLevel === 'Critical').length;
   const recentFive = analyses.slice(0, 5);
 
-  const tips = [
-    '🔍 Non-compete clauses over 12 months are often unenforceable in India — always check the duration.',
-    '⚖️ One-sided arbitration clauses — where one party picks the arbitrator — are a major red flag. Negotiate.',
-    '💡 IP clauses covering "ideas conceived outside work hours" are increasingly challenged in Indian courts.',
-    '🔐 Auto-renewal clauses with 30+ day notice windows are a common trap. Flag them before signing.',
-    '📝 Missing termination-for-cause definitions? That leaves you exposed to arbitrary firing.',
-  ];
-  const tip = tips[totalAnalyses % tips.length];
+  // AI-generated tip
+  const { tip: aiTip, loading: tipLoading } = useLegalTip();
+  const [currentTip, setCurrentTip] = useState<string | null>(null);
+  const [refreshing, setRefreshing] = useState(false);
+  const displayTip = currentTip ?? aiTip;
+
+  async function handleRefreshTip() {
+    setRefreshing(true);
+    const fresh = await fetchLegalTipFromAPI();
+    setCurrentTip(fresh);
+    setRefreshing(false);
+  }
 
   return (
     <div style={{ padding: '2rem 1.5rem', minHeight: '100vh', paddingTop: '5.5rem', position: 'relative', zIndex: 10 }}>
@@ -162,11 +168,44 @@ function DashboardContent() {
           <div style={{ display: 'flex', flexDirection: 'column', gap: '1.25rem' }}>
             {/* Tip Card */}
             <motion.div {...fadeUp(0.25)} className="glass-card" style={{ padding: '1.5rem', borderColor: 'rgba(249,115,22,0.2)', background: 'rgba(249,115,22,0.04)' }}>
-              <div style={{ display: 'flex', alignItems: 'center', gap: '0.5rem', marginBottom: '0.75rem' }}>
-                <CheckCircle size={15} color="var(--saffron)" />
-                <p style={{ fontSize: '0.7rem', fontWeight: 700, color: 'var(--saffron)', letterSpacing: '0.08em', textTransform: 'uppercase' }}>Legal Tip of the Day</p>
+              <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: '0.75rem' }}>
+                <div style={{ display: 'flex', alignItems: 'center', gap: '0.5rem' }}>
+                  <CheckCircle size={15} color="var(--saffron)" />
+                  <p style={{ fontSize: '0.7rem', fontWeight: 700, color: 'var(--saffron)', letterSpacing: '0.08em', textTransform: 'uppercase' }}>Legal Tip of the Day</p>
+                  <span style={{ fontSize: '0.6rem', fontWeight: 600, padding: '0.1rem 0.4rem', borderRadius: 4, background: 'rgba(249,115,22,0.15)', color: 'var(--saffron)', letterSpacing: '0.04em' }}>AI</span>
+                </div>
+                <button
+                  onClick={handleRefreshTip}
+                  disabled={refreshing || tipLoading}
+                  title="Get a new tip"
+                  style={{
+                    background: 'none', border: 'none', cursor: refreshing || tipLoading ? 'not-allowed' : 'pointer',
+                    color: 'var(--saffron)', opacity: refreshing || tipLoading ? 0.4 : 0.7,
+                    padding: '0.2rem', display: 'flex', alignItems: 'center', transition: 'opacity 0.2s',
+                  }}
+                  onMouseEnter={e => { if (!refreshing && !tipLoading) (e.currentTarget as HTMLElement).style.opacity = '1'; }}
+                  onMouseLeave={e => { (e.currentTarget as HTMLElement).style.opacity = refreshing || tipLoading ? '0.4' : '0.7'; }}
+                >
+                  <RefreshCw size={13} style={{ animation: refreshing ? 'spin 0.8s linear infinite' : 'none' }} />
+                </button>
               </div>
-              <p style={{ fontSize: '0.87rem', color: 'var(--text-secondary)', lineHeight: 1.7 }}>{tip}</p>
+              {tipLoading && !displayTip ? (
+                <div style={{ display: 'flex', flexDirection: 'column', gap: '0.4rem' }}>
+                  <div className="skeleton" style={{ height: 14, borderRadius: 6, width: '90%' }} />
+                  <div className="skeleton" style={{ height: 14, borderRadius: 6, width: '75%' }} />
+                  <div className="skeleton" style={{ height: 14, borderRadius: 6, width: '55%' }} />
+                </div>
+              ) : (
+                <motion.p
+                  key={displayTip}
+                  initial={{ opacity: 0, y: 6 }}
+                  animate={{ opacity: 1, y: 0 }}
+                  transition={{ duration: 0.35 }}
+                  style={{ fontSize: '0.87rem', color: 'var(--text-secondary)', lineHeight: 1.7 }}
+                >
+                  {displayTip}
+                </motion.p>
+              )}
             </motion.div>
 
             {/* Quick Links */}

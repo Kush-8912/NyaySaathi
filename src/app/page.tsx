@@ -1,4 +1,6 @@
 'use client';
+import { useEffect } from 'react';
+import { useRouter } from 'next/navigation';
 import { motion } from 'framer-motion';
 import Link from 'next/link';
 import { useAuth } from '@/hooks/useAuth';
@@ -50,8 +52,19 @@ const stats = [
 ];
 
 export default function LandingPage() {
-  const { user } = useAuth();
-  const ctaHref = user ? '/analyze' : '/signup';
+  const { user, loading } = useAuth();
+  const router = useRouter();
+
+  useEffect(() => {
+    if (!loading && user) {
+      router.replace('/dashboard');
+    }
+  }, [user, loading, router]);
+
+  // Don't flash the landing page while auth is resolving
+  if (loading || user) return null;
+
+  const ctaHref = '/signup';
 
   return (
     <div style={{ position: 'relative' }}>
