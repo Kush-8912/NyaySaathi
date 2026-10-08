@@ -31,7 +31,7 @@ NyaySaathi is an AI-powered contract analysis platform built for the Indian cont
 | Animations | Framer Motion |
 | Charts | Recharts |
 | Forms | React Hook Form + Zod |
-| AI | Google Gemini 2.5 Flash (called from a server-side API route) |
+| AI | Google Gemini 3.5 Flash, falling back to 2.5 Flash (called from a server-side API route) |
 | Auth | Firebase Authentication |
 | Database | Firebase Firestore |
 | Storage | Firebase Storage |
