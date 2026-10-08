@@ -1,7 +1,7 @@
 'use client';
 import { useState } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
-import type { ClauseAnalysis } from '@/types/analysis';
+import type { ClauseAnalysis, RiskDimensions } from '@/types/analysis';
 import RiskBadge from './RiskBadge';
 import { ChevronDown, ChevronUp, AlertTriangle, Lightbulb, Scale } from 'lucide-react';
 
@@ -10,13 +10,12 @@ interface ClauseRiskCardProps {
   index: number;
 }
 
-export default function ClauseRiskCard({ clause, index }: ClauseRiskCardProps) {
-  const [expanded, setExpanded] = useState(false);
+const scoreColor = (v: number): string =>
+  v >= 70 ? '#EF4444' : v >= 50 ? '#F97316' : v >= 30 ? '#EAB308' : '#10B981';
 
-  const scoreColor = (v: number): string =>
-    v >= 70 ? '#EF4444' : v >= 50 ? '#F97316' : v >= 30 ? '#EAB308' : '#10B981';
-
-  const RiskBar = ({ value, label }: { value: number; label: string }) => (
+// Defined outside the card so React doesn't remount the bars on every render
+function RiskBar({ value = 0, label, delay }: { value?: number; label: string; delay: number }) {
+  return (
     <div style={{ display: 'flex', flexDirection: 'column', gap: '0.25rem' }}>
       <div style={{ display: 'flex', justifyContent: 'space-between' }}>
         <span style={{ fontSize: '0.72rem', color: 'var(--text-muted)' }}>{label}</span>
@@ -27,11 +26,18 @@ export default function ClauseRiskCard({ clause, index }: ClauseRiskCardProps) {
           style={{ height: '100%', borderRadius: 99, background: scoreColor(value) }}
           initial={{ width: 0 }}
           animate={{ width: `${value}%` }}
-          transition={{ duration: 0.8, delay: index * 0.05 }}
+          transition={{ duration: 0.8, delay }}
         />
       </div>
     </div>
   );
+}
+
+export default function ClauseRiskCard({ clause, index }: ClauseRiskCardProps) {
+  const [expanded, setExpanded] = useState(false);
+  // Older saved reports may lack some fields; never let one missing value crash the page
+  const dims: Partial<RiskDimensions> = clause.riskDimensions ?? {};
+  const delay = index * 0.05;
 
   const chipStyle = (bg: string, border: string, color: string): React.CSSProperties => ({
     fontSize: '0.68rem', fontWeight: 700, color,
@@ -105,14 +111,14 @@ export default function ClauseRiskCard({ clause, index }: ClauseRiskCardProps) {
             lineHeight: 1.6, display: '-webkit-box', WebkitLineClamp: 2,
             WebkitBoxOrient: 'vertical' as const, overflow: 'hidden',
           }}>
-            &ldquo;{clause.clauseText}&rdquo;
+            {clause.clauseText && <>&ldquo;{clause.clauseText}&rdquo;</>}
           </p>
         </div>
 
         {/* Score + toggle */}
         <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'flex-end', gap: '0.4rem', flexShrink: 0 }}>
-          <span style={{ fontSize: '1.6rem', fontWeight: 800, lineHeight: 1, color: scoreColor(clause.riskScore) }}>
-            {clause.riskScore}
+          <span style={{ fontSize: '1.6rem', fontWeight: 800, lineHeight: 1, color: scoreColor(clause.riskScore ?? 0) }}>
+            {clause.riskScore ?? 0}
           </span>
           <span style={{ fontSize: '0.65rem', color: 'var(--text-muted)', fontWeight: 600, letterSpacing: '0.06em' }}>/ 100</span>
           {expanded
@@ -143,12 +149,13 @@ export default function ClauseRiskCard({ clause, index }: ClauseRiskCardProps) {
                   Risk Dimensions
                 </p>
                 <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '0.75rem 2rem' }}>
-                  <RiskBar value={clause.riskDimensions.financial} label="Financial" />
-                  <RiskBar value={clause.riskDimensions.employment} label="Employment" />
-                  <RiskBar value={clause.riskDimensions.ipOwnership} label="IP Ownership" />
-                  <RiskBar value={clause.riskDimensions.legalExposure} label="Legal Exposure" />
-                  <RiskBar value={clause.riskDimensions.termination} label="Termination" />
-                  <RiskBar value={clause.riskDimensions.ambiguity} label="Ambiguity" />
+                  <RiskBar value={dims.financial} label="Financial" delay={delay} />
+                  <RiskBar value={dims.privacy} label="Privacy" delay={delay} />
+                  <RiskBar value={dims.employment} label="Employment" delay={delay} />
+                  <RiskBar value={dims.ipOwnership} label="IP Ownership" delay={delay} />
+                  <RiskBar value={dims.legalExposure} label="Legal Exposure" delay={delay} />
+                  <RiskBar value={dims.termination} label="Termination" delay={delay} />
+                  <RiskBar value={dims.ambiguity} label="Ambiguity" delay={delay} />
                 </div>
               </div>
 

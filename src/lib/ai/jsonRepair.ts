@@ -1,8 +1,8 @@
 /**
  * Attempts to extract and parse valid JSON from an AI response string.
- * Handles markdown code fences, partial JSON, and common AI formatting artifacts.
+ * Handles markdown code fences, text around the JSON object and trailing commas.
  */
-export function repairJSON(raw: string): object | null {
+export function repairJSON(raw: string): unknown {
   if (!raw) return null;
 
   // 1. Strip markdown code fences
@@ -18,28 +18,23 @@ export function repairJSON(raw: string): object | null {
     // continue to repair
   }
 
-  // 3. Extract first {...} block
+  // 3. Extract the outermost {...} block
   const firstBrace = cleaned.indexOf('{');
   const lastBrace = cleaned.lastIndexOf('}');
-  if (firstBrace !== -1 && lastBrace !== -1 && lastBrace > firstBrace) {
+  if (firstBrace !== -1 && lastBrace > firstBrace) {
     cleaned = cleaned.slice(firstBrace, lastBrace + 1);
   }
 
-  // 4. Try again after extraction
   try {
     return JSON.parse(cleaned);
   } catch {
     // continue
   }
 
-  // 5. Fix common issues: trailing commas, single quotes
-  cleaned = cleaned
-    .replace(/,\s*([}\]])/g, '$1') // trailing commas
-    .replace(/'/g, '"') // single to double quotes
-    .replace(/([{,]\s*)(\w+)(\s*:)/g, '$1"$2"$3'); // unquoted keys
-
+  // 4. Remove trailing commas. (Quotes are deliberately left alone: replacing ' with "
+  //    would corrupt apostrophes in the text, e.g. "employee's".)
   try {
-    return JSON.parse(cleaned);
+    return JSON.parse(cleaned.replace(/,\s*([}\]])/g, '$1'));
   } catch {
     return null;
   }

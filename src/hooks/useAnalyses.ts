@@ -11,6 +11,7 @@ export function useAnalyses(uid: string | null) {
   const fetchAnalyses = useCallback(async () => {
     if (!uid) { setAnalyses([]); return; }
     setLoading(true);
+    setError(null);
     try {
       const data = await getUserAnalyses(uid);
       setAnalyses(data);

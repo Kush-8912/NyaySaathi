@@ -9,6 +9,10 @@ export default function CustomCursor() {
     const dot  = dotRef.current;
     const blob = blobRef.current;
     if (!dot || !blob) return;
+    // Touch screens have no hover pointer: the cursor would just sit frozen mid-screen
+    if (!window.matchMedia('(pointer: fine)').matches) return;
+    dot.style.display = 'block';
+    blob.style.display = 'block';
 
     let bx = window.innerWidth / 2, by = window.innerHeight / 2;
     let mx = bx, my = by;
@@ -37,12 +41,12 @@ export default function CustomCursor() {
       <div ref={dotRef} style={{
         position: 'fixed', width: 8, height: 8, borderRadius: '50%',
         background: 'var(--saffron)', pointerEvents: 'none', zIndex: 99999,
-        top: 0, left: 0, willChange: 'transform',
+        top: 0, left: 0, willChange: 'transform', display: 'none',
       }} />
       <div ref={blobRef} style={{
         position: 'fixed', width: 36, height: 36, borderRadius: '50%',
         border: '2px solid rgba(99,102,241,0.5)', pointerEvents: 'none', zIndex: 99998,
-        top: 0, left: 0, willChange: 'transform',
+        top: 0, left: 0, willChange: 'transform', display: 'none',
       }} />
     </>
   );

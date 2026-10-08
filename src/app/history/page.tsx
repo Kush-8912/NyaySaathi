@@ -35,20 +35,25 @@ function HistoryContent() {
 
   const filtered = useMemo(() => {
     return analyses.filter(a => {
-      const q = search.toLowerCase();
-      const matchSearch = !search || a.title.toLowerCase().includes(q) || a.contractType.toLowerCase().includes(q);
+      const q = search.trim().toLowerCase();
+      // Older documents may be missing fields, so don't assume they're strings
+      const matchSearch = !q || (a.title ?? '').toLowerCase().includes(q) || (a.contractType ?? '').toLowerCase().includes(q);
       const matchType = filterType === 'All' || a.contractType === filterType;
       const matchRisk = filterRisk === 'All' || a.riskLevel === filterRisk;
       return matchSearch && matchType && matchRisk;
     });
   }, [analyses, search, filterType, filterRisk]);
 
-  const contractTypes = ['All', ...Array.from(new Set(analyses.map(a => a.contractType)))];
+  const contractTypes = ['All', ...Array.from(new Set(analyses.map(a => a.contractType).filter(Boolean)))];
 
   const handleDelete = async (id: string) => {
     if (!confirm('Delete this analysis? This cannot be undone.')) return;
-    await remove(id);
-    toast.success('Analysis deleted.');
+    try {
+      await remove(id);
+      toast.success('Analysis deleted.');
+    } catch {
+      toast.error('Could not delete the analysis. Please try again.');
+    }
   };
 
   return (

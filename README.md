@@ -11,7 +11,7 @@ NyaySaathi is an AI-powered contract analysis platform built for the Indian cont
 - Upload PDF, DOCX, or TXT contracts, or paste text directly
 - 6-agent AI pipeline for clause extraction, risk scoring, and explanation
 - Risk score (0–100) with dimension-level breakdown
-- Plain English and Hinglish explanations
+- Plain English and simplified explanations
 - Worst-case scenario simulations
 - Negotiation recommendations with suggested wording
 - PDF report export
@@ -31,7 +31,7 @@ NyaySaathi is an AI-powered contract analysis platform built for the Indian cont
 | Animations | Framer Motion |
 | Charts | Recharts |
 | Forms | React Hook Form + Zod |
-| AI | Google Gemini 1.5 Flash |
+| AI | Google Gemini 2.5 Flash (called from a server-side API route) |
 | Auth | Firebase Authentication |
 | Database | Firebase Firestore |
 | Storage | Firebase Storage |
@@ -54,7 +54,7 @@ npm install
 
 ### 2. Environment variables
 
-Create a `.env.local` file in the project root:
+Copy `.env.example` to `.env.local` in the project root and fill it in:
 
 ```env
 NEXT_PUBLIC_FIREBASE_API_KEY=your_firebase_api_key
@@ -64,8 +64,10 @@ NEXT_PUBLIC_FIREBASE_STORAGE_BUCKET=your_project.appspot.com
 NEXT_PUBLIC_FIREBASE_MESSAGING_SENDER_ID=your_sender_id
 NEXT_PUBLIC_FIREBASE_APP_ID=your_app_id
 
-NEXT_PUBLIC_GEMINI_API_KEY=your_gemini_api_key
+GEMINI_API_KEY=your_gemini_api_key
 ```
+
+`GEMINI_API_KEY` is a secret. It is only read on the server (`src/app/api/analyze/route.ts`), so do **not** give it a `NEXT_PUBLIC_` prefix, which would expose it in the browser.
 
 ### 3. Firebase setup
 
@@ -81,9 +83,13 @@ NEXT_PUBLIC_GEMINI_API_KEY=your_gemini_api_key
 ### 4. Gemini API key
 
 1. Go to [Google AI Studio](https://aistudio.google.com)
-2. Generate an API key and add it to `.env.local` as `NEXT_PUBLIC_GEMINI_API_KEY`
+2. Generate an API key and add it to `.env.local` as `GEMINI_API_KEY`
 
-### 5. Run locally
+### 5. Deploying to Vercel
+
+Add the same variables under **Project → Settings → Environment Variables** (with `GEMINI_API_KEY`, not `NEXT_PUBLIC_GEMINI_API_KEY`) and redeploy. Contract analysis can take up to a minute; the API route allows 60 seconds.
+
+### 6. Run locally
 
 ```bash
 npm run dev

@@ -7,6 +7,7 @@ import { zodResolver } from '@hookform/resolvers/zod';
 import { signupSchema, type SignupInput } from '@/lib/validations/auth';
 import { signupWithEmail } from '@/lib/firebase/auth';
 import { createUserProfile } from '@/lib/firebase/firestore';
+import { authErrorMessage } from '@/lib/firebase/authErrors';
 import { toast } from 'sonner';
 import { Eye, EyeOff, Mail, Lock, User } from 'lucide-react';
 import PasswordChecklist from './PasswordChecklist';
@@ -29,9 +30,7 @@ export default function SignupForm() {
       toast.success('Account created! Welcome to NyaySaathi 🎉');
       router.push('/dashboard');
     } catch (err: unknown) {
-      const msg = err instanceof Error && err.message.includes('email-already-in-use')
-        ? 'An account with this email already exists.' : 'Signup failed. Please try again.';
-      toast.error(msg);
+      toast.error(authErrorMessage(err, 'Signup failed. Please try again.'));
     }
   };
 

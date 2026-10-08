@@ -1,5 +1,6 @@
 'use client';
 import { loginWithGoogle } from '@/lib/firebase/auth';
+import { authErrorMessage, isPopupDismissed } from '@/lib/firebase/authErrors';
 import { toast } from 'sonner';
 import { useRouter } from 'next/navigation';
 
@@ -14,7 +15,7 @@ export default function GoogleButton({ label = 'Continue with Google' }: GoogleB
       toast.success('Signed in with Google!');
       router.push('/dashboard');
     } catch (err: unknown) {
-      toast.error(err instanceof Error ? err.message : 'Google sign-in failed');
+      if (!isPopupDismissed(err)) toast.error(authErrorMessage(err, 'Google sign-in failed. Please try again.'));
     }
   };
 

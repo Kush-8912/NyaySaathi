@@ -74,7 +74,7 @@ export async function changeUserPassword(user: User, currentPassword: string, ne
 export function onAuthStateChanged(callback: (user: User | null) => void) {
   try {
     return _onAuthStateChanged(getFirebaseAuth(), callback);
-  } catch (err) {
+  } catch {
     console.warn('[NyaySaathi] Firebase Auth not available — add API keys to .env.local');
     callback(null);
     return () => {};

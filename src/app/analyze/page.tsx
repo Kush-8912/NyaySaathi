@@ -1,5 +1,5 @@
 'use client';
-import { useState, useCallback } from 'react';
+import { useState, useCallback, useEffect } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
 import { useAuth } from '@/hooks/useAuth';
 import { useAIAnalysis } from '@/hooks/useAIAnalysis';
@@ -8,7 +8,7 @@ import AgentThinking from '@/components/animations/AgentThinking';
 import { toast } from 'sonner';
 import { useRouter } from 'next/navigation';
 import { Upload, FileText, Type, X, AlertCircle, Sparkles, ChevronDown } from 'lucide-react';
-import { CONTRACT_TYPES, USER_PERSPECTIVES, PREFERRED_LANGUAGES, DEMO_CONTRACT_TEXT, MAX_FILE_SIZE_MB } from '@/lib/constants';
+import { CONTRACT_TYPES, USER_PERSPECTIVES, PREFERRED_LANGUAGES, DEMO_CONTRACT_TEXT, MAX_FILE_SIZE_MB, MAX_TEXT_CHARS } from '@/lib/constants';
 import { extractPDFText } from '@/lib/document/pdfExtractor';
 import { extractDOCXText } from '@/lib/document/docxExtractor';
 import { cleanText } from '@/lib/document/textCleaner';
@@ -51,7 +51,7 @@ function SelectField({ label, value, onChange, options }: { label: string; value
 function AnalyzeContent() {
   const { user } = useAuth();
   const router = useRouter();
-  const { analyzing, currentStep, currentMessage, run } = useAIAnalysis();
+  const { analyzing, currentStep, currentMessage, error: analysisError, run } = useAIAnalysis();
 
   const [tab, setTab] = useState<Tab>('paste');
   const [pastedText, setPastedText] = useState('');
@@ -65,11 +65,23 @@ function AnalyzeContent() {
   const [isDragOver, setIsDragOver] = useState(false);
 
   const activeText = tab === 'paste' ? pastedText : extractedText;
+  const tooLong = activeText.length > MAX_TEXT_CHARS;
+
+  // Analysis errors (AI unavailable, network, session expired...) come back from the hook
+  useEffect(() => {
+    if (analysisError) toast.error(analysisError);
+  }, [analysisError]);
 
   const handleFile = useCallback(async (file: File) => {
     setExtractError('');
     setExtractedText('');
-    setFileName(file.name);
+    setFileName('');
+
+    const ext = file.name.split('.').pop()?.toLowerCase();
+    if (!['pdf', 'docx', 'txt'].includes(ext ?? '')) {
+      setExtractError('Unsupported file type. Please upload a PDF, DOCX or TXT file.');
+      return;
+    }
 
     if (file.size > MAX_FILE_SIZE_MB * 1024 * 1024) {
       setExtractError(`File too large. Max ${MAX_FILE_SIZE_MB}MB.`);
@@ -79,19 +91,22 @@ function AnalyzeContent() {
     setExtracting(true);
     try {
       let text = '';
-      if (file.type === 'application/pdf') {
+      if (ext === 'pdf') {
         text = await extractPDFText(file);
-      } else if (file.name.endsWith('.docx')) {
+      } else if (ext === 'docx') {
         text = await extractDOCXText(file);
       } else {
         text = await file.text();
       }
-      setExtractedText(cleanText(text));
+      const cleaned = cleanText(text);
+      if (cleaned.length < 50) throw new Error('This file has too little text to analyze. Please paste the text manually.');
+      setExtractedText(cleaned);
+      setFileName(file.name);
       toast.success('Text extracted successfully!');
-    } catch {
-      setExtractError('Could not extract text. Please paste the text manually.');
-      setTab('paste');
-      toast.error('Extraction failed — switch to paste mode');
+    } catch (err) {
+      const message = err instanceof Error ? err.message : 'Could not extract text. Please paste the text manually.';
+      setExtractError(message);
+      toast.error(message);
     } finally {
       setExtracting(false);
     }
@@ -106,6 +121,8 @@ function AnalyzeContent() {
 
   const handleFileInput = (e: React.ChangeEvent<HTMLInputElement>) => {
     const file = e.target.files?.[0];
+    // Reset so choosing the same file again (e.g. after an error) still fires onChange
+    e.target.value = '';
     if (file) handleFile(file);
   };
 
@@ -116,7 +133,8 @@ function AnalyzeContent() {
       toast.error('Please provide at least 50 characters of contract text');
       return;
     }
-    const id = await run({ uid: user.uid, contractText: text, contractType, perspective, preferredLanguage, fileName });
+    // The file name is only a title fallback for uploads, not for pasted text
+    const id = await run({ uid: user.uid, contractText: text, contractType, perspective, preferredLanguage, fileName: tab === 'upload' ? fileName : undefined });
     if (id) {
       toast.success('Analysis complete!');
       router.push(`/report/${id}`);
@@ -137,7 +155,7 @@ function AnalyzeContent() {
           </p>
         </motion.div>
 
-        <div style={{ display: 'grid', gridTemplateColumns: '1fr 300px', gap: '1.5rem', alignItems: 'start' }}>
+        <div className="analyze-grid" style={{ display: 'grid', gridTemplateColumns: '1fr 300px', gap: '1.5rem', alignItems: 'start' }}>
 
           {/* ── Left: Input Area ── */}
           <div style={{ display: 'flex', flexDirection: 'column', gap: '1rem' }}>
@@ -190,7 +208,7 @@ function AnalyzeContent() {
                 {extractedText && (
                   <div style={{ marginTop: '1rem', textAlign: 'left', padding: '0.75rem', borderRadius: 10, background: 'rgba(255,255,255,0.03)', border: '1px solid var(--border-subtle)', maxHeight: 120, overflowY: 'auto' }}>
                     <p style={{ fontSize: '0.75rem', color: 'var(--text-muted)', fontFamily: 'monospace' }}>
-                      {extractedText.slice(0, 400)}...
+                      {extractedText.length > 400 ? `${extractedText.slice(0, 400)}...` : extractedText}
                     </p>
                   </div>
                 )}
@@ -228,6 +246,12 @@ function AnalyzeContent() {
                   </button>
                 </div>
               </motion.div>
+            )}
+
+            {tooLong && (
+              <p style={{ fontSize: '0.8rem', color: '#FB923C' }}>
+                This document is {activeText.length.toLocaleString()} characters long. Only the first {MAX_TEXT_CHARS.toLocaleString()} will be analyzed.
+              </p>
             )}
 
             {/* Agent animation or Analyze button */}

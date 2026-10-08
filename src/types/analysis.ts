@@ -121,6 +121,8 @@ export interface StoredAnalysis {
   topRisks: TopRisk[];
   finalRecommendation: string;
   disclaimer: string;
+  // True when the contract was longer than the AI limit and only the first part was analyzed
+  truncated?: boolean;
   createdAt: Date | string;
   updatedAt: Date | string;
   status: string;

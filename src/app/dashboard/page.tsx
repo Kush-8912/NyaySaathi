@@ -28,8 +28,9 @@ function DashboardContent() {
 
   const totalAnalyses = analyses.length;
   const avgRisk = totalAnalyses > 0
-    ? Math.round(analyses.reduce((sum, a) => sum + (a.overallRiskScore ?? 0), 0) / totalAnalyses)
+    ? Math.round(analyses.reduce((sum, a) => sum + (Number(a.overallRiskScore) || 0), 0) / totalAnalyses)
     : 0;
+  const highRiskCount = analyses.filter(a => a.riskLevel === 'High').length;
   const criticalCount = analyses.filter(a => a.riskLevel === 'Critical').length;
   const recentFive = analyses.slice(0, 5);
 
@@ -72,12 +73,12 @@ function DashboardContent() {
         </motion.div>
 
         {/* ── Stats ────────────────────────────────────── */}
-        <div style={{ display: 'grid', gridTemplateColumns: 'repeat(4, 1fr)', gap: '1rem', marginBottom: '2rem' }}>
+        <div className="stats-grid" style={{ display: 'grid', gridTemplateColumns: 'repeat(4, 1fr)', gap: '1rem', marginBottom: '2rem' }}>
           {[
             { label: 'Total Analyzed',   value: totalAnalyses, icon: FileSearch, color: '#818CF8', suffix: '' },
             { label: 'Avg Risk Score',   value: avgRisk,       icon: TrendingUp, color: '#FB923C', suffix: '/100' },
             { label: 'Critical Risks',   value: criticalCount, icon: AlertTriangle, color: '#F87171', suffix: '' },
-            { label: 'Contracts Saved',  value: totalAnalyses, icon: Shield,     color: '#34D399', suffix: '' },
+            { label: 'High Risks',       value: highRiskCount, icon: Shield,     color: '#FACC15', suffix: '' },
           ].map((stat, i) => {
             const Icon = stat.icon;
             return (
@@ -97,7 +98,7 @@ function DashboardContent() {
         </div>
 
         {/* ── Main content: Recent + Tip ────────────────── */}
-        <div style={{ display: 'grid', gridTemplateColumns: '1fr 340px', gap: '1.5rem', alignItems: 'start' }}>
+        <div className="dashboard-grid" style={{ display: 'grid', gridTemplateColumns: '1fr 340px', gap: '1.5rem', alignItems: 'start' }}>
 
           {/* Recent Analyses */}
           <motion.div {...fadeUp(0.2)}>

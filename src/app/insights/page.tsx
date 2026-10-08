@@ -24,7 +24,7 @@ function InsightsContent() {
     analyses.forEach(a => {
       if (!map[a.contractType]) map[a.contractType] = { count: 0, totalScore: 0 };
       map[a.contractType].count++;
-      map[a.contractType].totalScore += a.overallRiskScore;
+      map[a.contractType].totalScore += Number(a.overallRiskScore) || 0;
     });
     return Object.entries(map).map(([category, v]) => ({
       category, count: v.count, avgScore: Math.round(v.totalScore / v.count),
@@ -34,20 +34,21 @@ function InsightsContent() {
   const trendData = useMemo(() =>
     [...analyses].reverse().slice(-20).map(a => ({
       date: formatDate(a.createdAt),
-      score: a.overallRiskScore,
+      score: Number(a.overallRiskScore) || 0,
     })), [analyses]);
 
   const clauseFrequency = useMemo(() => {
     const map: Record<string, number> = {};
     analyses.forEach(a => a.clauseAnalyses?.forEach(c => {
-      map[c.category] = (map[c.category] || 0) + 1;
+      const key = c.category || 'Other';
+      map[key] = (map[key] || 0) + 1;
     }));
     return Object.entries(map).sort((a, b) => b[1] - a[1]).slice(0, 8)
       .map(([category, count]) => ({ category, count, avgScore: 0 }));
   }, [analyses]);
 
   const avgScore = analyses.length
-    ? Math.round(analyses.reduce((s, a) => s + a.overallRiskScore, 0) / analyses.length)
+    ? Math.round(analyses.reduce((s, a) => s + (Number(a.overallRiskScore) || 0), 0) / analyses.length)
     : 0;
   const criticalCount = analyses.filter(a => a.riskLevel === 'Critical').length;
 
@@ -98,7 +99,7 @@ function InsightsContent() {
           <div style={{ display: 'flex', flexDirection: 'column', gap: '1.5rem' }}>
 
             {/* ── Stat Cards ─────────────────────────────── */}
-            <div style={{ display: 'grid', gridTemplateColumns: 'repeat(4, 1fr)', gap: '1rem' }}>
+            <div className="insights-stats" style={{ display: 'grid', gridTemplateColumns: 'repeat(4, 1fr)', gap: '1rem' }}>
               {stats.map((s, i) => {
                 const Icon = s.icon;
                 return (
@@ -126,7 +127,7 @@ function InsightsContent() {
             </div>
 
             {/* ── Charts row ─────────────────────────────── */}
-            <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '1.25rem' }}>
+            <div className="insights-grid-2" style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '1.25rem' }}>
 
               {/* Risk Score Trend */}
               <motion.div {...fadeUp(0.18)} className="glass-card" style={{ padding: '1.5rem' }}>

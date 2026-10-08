@@ -1,46 +1,13 @@
 /**
- * Splits long contract text into manageable chunks for AI processing.
- * Preserves paragraph integrity where possible.
+ * Returns the part of the contract that is sent to the AI, and whether it had to be cut.
+ * Cuts at the last paragraph or sentence break before the limit so no clause is split mid-sentence.
  */
-export function chunkText(text: string, maxChars = 12000): string[] {
-  if (text.length <= maxChars) return [text];
+export function getAnalysisText(text: string, maxChars: number): { text: string; truncated: boolean } {
+  if (text.length <= maxChars) return { text, truncated: false };
 
-  const chunks: string[] = [];
-  const paragraphs = text.split(/\n\n+/);
-  let current = '';
-
-  for (const para of paragraphs) {
-    if ((current + para).length > maxChars) {
-      if (current.trim()) chunks.push(current.trim());
-      // If a single paragraph exceeds limit, split by sentences
-      if (para.length > maxChars) {
-        const sentences = para.split(/(?<=[.!?])\s+/);
-        let sentChunk = '';
-        for (const s of sentences) {
-          if ((sentChunk + s).length > maxChars) {
-            if (sentChunk.trim()) chunks.push(sentChunk.trim());
-            sentChunk = s + ' ';
-          } else {
-            sentChunk += s + ' ';
-          }
-        }
-        if (sentChunk.trim()) current = sentChunk;
-        else current = '';
-      } else {
-        current = para + '\n\n';
-      }
-    } else {
-      current += para + '\n\n';
-    }
-  }
-  if (current.trim()) chunks.push(current.trim());
-  return chunks;
-}
-
-/**
- * Returns the most important chunk(s) for AI analysis.
- * For demo we take the first 12000 chars to stay within limits.
- */
-export function getAnalysisText(text: string, maxChars = 12000): string {
-  return text.slice(0, maxChars);
+  const slice = text.slice(0, maxChars);
+  const breakAt = Math.max(slice.lastIndexOf('\n\n'), slice.lastIndexOf('. '));
+  // Only use the break if it doesn't throw away more than ~10% of the allowed text
+  const end = breakAt > maxChars * 0.9 ? breakAt + 1 : maxChars;
+  return { text: slice.slice(0, end).trim(), truncated: true };
 }

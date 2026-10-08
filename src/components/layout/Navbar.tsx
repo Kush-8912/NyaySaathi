@@ -1,9 +1,9 @@
 'use client';
 import Link from 'next/link';
 import { usePathname, useRouter } from 'next/navigation';
-import { useState, useEffect } from 'react';
+import { useState, useSyncExternalStore } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
-import { Scale, Menu, X, LogOut, LayoutDashboard, FileSearch, History, BarChart3, Sun, Moon } from 'lucide-react';
+import { Scale, Menu, X, LogOut, LayoutDashboard, FileSearch, History, BarChart3, Sun, Moon, UserCircle } from 'lucide-react';
 import { useAuth } from '@/hooks/useAuth';
 import { useUserProfile } from '@/hooks/useUserProfile';
 import { logout } from '@/lib/firebase/auth';
@@ -24,16 +24,18 @@ export default function Navbar() {
   const router = useRouter();
   const [mobileOpen, setMobileOpen] = useState(false);
   const { theme, toggleTheme } = useTheme();
-  const [mounted, setMounted] = useState(false);
-
-  useEffect(() => {
-    setMounted(true);
-  }, []);
+  // false during server render, true in the browser: the theme icon depends on localStorage
+  const mounted = useSyncExternalStore(() => () => {}, () => true, () => false);
 
   const handleLogout = async () => {
-    await logout();
-    toast.success('Signed out');
-    router.push('/login');
+    setMobileOpen(false);
+    try {
+      await logout();
+      toast.success('Signed out');
+      router.push('/login');
+    } catch {
+      toast.error('Could not sign out. Please try again.');
+    }
   };
 
   const isPublicPage = ['/', '/login', '/signup', '/forgot-password'].includes(pathname);
@@ -151,7 +153,7 @@ export default function Navbar() {
           <motion.div initial={{ opacity: 0, height: 0 }} animate={{ opacity: 1, height: 'auto' }} exit={{ opacity: 0, height: 0 }}
             style={{ borderTop: '1px solid var(--border-default)', background: 'var(--bg-surface)', backdropFilter: 'blur(20px)' }}>
             <div style={{ padding: '1rem 1.5rem', display: 'flex', flexDirection: 'column', gap: '0.5rem' }}>
-              {user && navLinks.map(link => {
+              {user && [...navLinks, { href: '/account', label: 'Account', icon: UserCircle }].map(link => {
                 const Icon = link.icon;
                 const active = pathname === link.href;
                 return (

@@ -1,87 +1,73 @@
+// SERVER ONLY. Imported by the /api route handlers, never by client components,
+// so the Gemini API key is never sent to the browser.
 import { GoogleGenerativeAI } from '@google/generative-ai';
 import type { AIAnalysisResult } from '@/types/analysis';
 import type { AIRequestOptions } from '@/types/ai';
+import { MAX_TEXT_CHARS } from '@/lib/constants';
 import { buildAnalysisPrompt } from './prompts';
 import { repairJSON } from './jsonRepair';
 import { getAnalysisText } from './chunking';
-import { getMockAnalysis } from './mockResponses';
+import { normalizeAnalysis } from './normalize';
 
-const genAI = process.env.NEXT_PUBLIC_GEMINI_API_KEY
-  ? new GoogleGenerativeAI(process.env.NEXT_PUBLIC_GEMINI_API_KEY)
-  : null;
+export const GEMINI_MODEL = process.env.GEMINI_MODEL || 'gemini-2.5-flash';
 
-export type AnalysisProgressCallback = (step: string, message: string) => void;
+// NEXT_PUBLIC_GEMINI_API_KEY is still read so existing deployments keep working,
+// but it is only ever used here on the server. Prefer GEMINI_API_KEY.
+function getGeminiApiKey(): string | undefined {
+  return process.env.GEMINI_API_KEY || process.env.NEXT_PUBLIC_GEMINI_API_KEY;
+}
 
-export async function analyzeContract(
-  options: AIRequestOptions,
-  onProgress?: AnalysisProgressCallback,
-): Promise<{ result: AIAnalysisResult; usedMock: boolean }> {
-  const { contractText, contractType, perspective, preferredLanguage } = options;
-  const safeText = getAnalysisText(contractText, 12000);
-
-  const steps = [
-    { key: 'extract', msg: 'Extracting legal clauses...' },
-    { key: 'classify', msg: 'Classifying risk categories...' },
-    { key: 'adversarial', msg: 'Running adversarial reasoning...' },
-    { key: 'explain', msg: 'Generating plain language explanations...' },
-    { key: 'negotiate', msg: 'Building negotiation plan...' },
-    { key: 'report', msg: 'Compiling risk report...' },
-  ];
-
-  // Simulate progress for UX even during real AI call
-  let stepIdx = 0;
-  const progressInterval = setInterval(() => {
-    if (stepIdx < steps.length && onProgress) {
-      onProgress(steps[stepIdx].key, steps[stepIdx].msg);
-      stepIdx++;
-    }
-  }, 1200);
-
-  try {
-    if (!genAI) throw new Error('Gemini API key not configured');
-
-    const model = genAI.getGenerativeModel({ model: 'gemini-2.5-flash' });
-    const prompt = buildAnalysisPrompt(safeText, contractType, perspective, preferredLanguage);
-
-    const response = await model.generateContent(prompt);
-    const text = response.response.text();
-
-    clearInterval(progressInterval);
-    if (onProgress) onProgress('report', 'Compiling risk report...');
-
-    const parsed = repairJSON(text) as AIAnalysisResult | null;
-    if (parsed && parsed.clauseAnalyses && parsed.overallRiskScore !== undefined) {
-      return { result: parsed, usedMock: false };
-    }
-
-    // Parsed but incomplete — augment with mock structure
-    console.warn('AI returned incomplete JSON, using mock fallback');
-    return { result: getMockAnalysis(contractType), usedMock: true };
-  } catch (err) {
-    clearInterval(progressInterval);
-    if (onProgress) onProgress('report', 'Using demo analysis...');
-    console.error('AI analysis failed:', err);
-    return { result: getMockAnalysis(contractType), usedMock: true };
+/** An error whose message is safe to show to the user, with the HTTP status to return. */
+export class AnalysisError extends Error {
+  constructor(message: string, public status = 502) {
+    super(message);
   }
 }
 
-// ─── Legal Tip of the Day ────────────────────────────────────────────────────
-
-const FALLBACK_TIPS = [
-  '🔍 Non-compete clauses over 12 months are often unenforceable in India — always check the duration.',
-  '⚖️ One-sided arbitration clauses — where one party picks the arbitrator — are a major red flag. Negotiate.',
-  '💡 IP clauses covering "ideas conceived outside work hours" are increasingly challenged in Indian courts.',
-  '🔐 Auto-renewal clauses with 30+ day notice windows are a common trap. Flag them before signing.',
-  '📝 Missing termination-for-cause definitions? That leaves you exposed to arbitrary firing.',
-];
-
-export async function fetchLegalTip(): Promise<string> {
-  if (!genAI) {
-    return FALLBACK_TIPS[Math.floor(Math.random() * FALLBACK_TIPS.length)];
+export async function analyzeContract(
+  options: AIRequestOptions,
+): Promise<{ result: AIAnalysisResult; model: string; truncated: boolean }> {
+  const apiKey = getGeminiApiKey();
+  if (!apiKey) {
+    throw new AnalysisError('AI analysis is not configured on the server yet.', 503);
   }
 
+  const { contractType, perspective, preferredLanguage } = options;
+  const { text, truncated } = getAnalysisText(options.contractText, MAX_TEXT_CHARS);
+
+  const model = new GoogleGenerativeAI(apiKey).getGenerativeModel({
+    model: GEMINI_MODEL,
+    // Ask Gemini for raw JSON so the response doesn't need fence-stripping or guesswork
+    generationConfig: { responseMimeType: 'application/json', temperature: 0.2 },
+  });
+
+  let raw: string;
   try {
-    const model = genAI.getGenerativeModel({ model: 'gemini-2.5-flash' });
+    const response = await model.generateContent(
+      buildAnalysisPrompt(text, contractType, perspective, preferredLanguage, truncated),
+    );
+    raw = response.response.text();
+  } catch (err) {
+    console.error('[analyzeContract] Gemini call failed:', err);
+    throw new AnalysisError('The AI service could not analyse this document right now. Please try again in a minute.');
+  }
+
+  const result = normalizeAnalysis(repairJSON(raw), { contractType, perspective });
+  if (!result) {
+    console.error('[analyzeContract] Unusable AI response:', raw.slice(0, 500));
+    throw new AnalysisError('The AI returned an incomplete analysis. Please try again.');
+  }
+
+  return { result, model: GEMINI_MODEL, truncated };
+}
+
+/** Returns an AI-generated tip, or null if the AI isn't configured or the call fails. */
+export async function generateLegalTip(): Promise<string | null> {
+  const apiKey = getGeminiApiKey();
+  if (!apiKey) return null;
+
+  try {
+    const model = new GoogleGenerativeAI(apiKey).getGenerativeModel({ model: GEMINI_MODEL });
     const prompt = `You are NyaySaathi, an AI legal assistant specialised in Indian contract law.
 
 Generate exactly ONE practical legal tip for someone reviewing or signing contracts in India today.
@@ -97,13 +83,11 @@ Respond with ONLY the tip text — no title, no label, no extra text.`;
     const response = await model.generateContent(prompt);
     const tip = response.response.text().trim();
 
-    // Safety: if the response looks malformed return a fallback
-    if (!tip || tip.length < 20 || tip.length > 400) {
-      throw new Error('Unexpected tip format');
-    }
+    // Safety: reject anything that doesn't look like a short tip
+    if (tip.length < 20 || tip.length > 400) return null;
     return tip;
   } catch (err) {
-    console.warn('fetchLegalTip failed, using fallback:', err);
-    return FALLBACK_TIPS[Math.floor(Math.random() * FALLBACK_TIPS.length)];
+    console.warn('[generateLegalTip] Gemini call failed:', err);
+    return null;
   }
 }

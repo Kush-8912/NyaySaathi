@@ -9,12 +9,37 @@ interface DownloadReportButtonProps {
   analysis: StoredAnalysis;
 }
 
-export default function DownloadReportButton({ analysis }: DownloadReportButtonProps) {
+// jsPDF's built-in Helvetica only covers basic Latin characters. Anything else (₹, curly
+// quotes, emoji, Devanagari) prints as garbage, so convert or drop it before drawing.
+const pdfSafe = (value: unknown): string =>
+  String(value ?? '')
+    .replace(/₹\s?/g, 'Rs. ')
+    .replace(/[\u2018\u2019\u201A\u2032]/g, "'")
+    .replace(/[\u201C\u201D\u201E\u2033]/g, '"')
+    .replace(/[\u2013\u2014\u2212]/g, '-')
+    .replace(/\u2026/g, '...')
+    .replace(/[\u2022\u00B7]/g, '-')
+    .replace(/[\u00A0\u2009\u202F]/g, ' ')
+    .replace(/[^\x09\x0A\x0D\x20-\x7E\xA0-\xFF]/g, '')
+    .trim();
+
+// Applies pdfSafe to every string in the report (also turns missing fields into '')
+const deepPdfSafe = <T,>(value: T): T => {
+  if (typeof value === 'string') return pdfSafe(value) as T;
+  if (Array.isArray(value)) return value.map(deepPdfSafe) as T;
+  if (value && typeof value === 'object' && !(value instanceof Date)) {
+    return Object.fromEntries(Object.entries(value).map(([k, v]) => [k, deepPdfSafe(v)])) as T;
+  }
+  return value;
+};
+
+export default function DownloadReportButton({ analysis: original }: DownloadReportButtonProps) {
   const [loading, setLoading] = useState(false);
 
   const handleDownload = async () => {
     setLoading(true);
     try {
+      const analysis = deepPdfSafe(original);
       const { jsPDF } = await import('jspdf');
       const doc = new jsPDF({ orientation: 'portrait', unit: 'mm', format: 'a4' });
       const W = 210;
@@ -65,6 +90,7 @@ export default function DownloadReportButton({ analysis }: DownloadReportButtonP
         text: string, size: number, bold: boolean,
         color: [number,number,number], x = margin, maxW = usable
       ) => {
+        if (!text) return;
         doc.setFontSize(size);
         doc.setTextColor(...color);
         doc.setFont('helvetica', bold ? 'bold' : 'normal');
@@ -122,20 +148,20 @@ export default function DownloadReportButton({ analysis }: DownloadReportButtonP
       doc.text(`Report generated: ${formatDate(analysis.createdAt)}`, margin, y);
 
       // Risk score (right aligned)
-      const sc = analysis.overallRiskScore;
+      const sc = Math.round(Number(analysis.overallRiskScore) || 0);
       const sc_c = scoreColor(sc);
       doc.setFontSize(34); doc.setTextColor(...sc_c); doc.setFont('helvetica', 'bold');
       doc.text(`${sc}`, W - margin, 26, { align: 'right' });
       doc.setFontSize(8); doc.setTextColor(...C.muted); doc.setFont('helvetica', 'normal');
       doc.text('out of 100', W - margin, 33, { align: 'right' });
       doc.setFontSize(9); doc.setTextColor(...sc_c); doc.setFont('helvetica', 'bold');
-      doc.text(analysis.riskLevel.toUpperCase(), W - margin, 40, { align: 'right' });
+      doc.text((analysis.riskLevel || '').toUpperCase(), W - margin, 40, { align: 'right' });
 
       y = 58;
 
       // Contract title
       doc.setFontSize(17); doc.setTextColor(...C.text); doc.setFont('helvetica', 'bold');
-      const titleLines = doc.splitTextToSize(analysis.title, usable);
+      const titleLines = doc.splitTextToSize(analysis.title || 'Contract Analysis', usable);
       doc.text(titleLines, margin, y);
       y += titleLines.length * 7 + 4;
 
@@ -152,6 +178,7 @@ export default function DownloadReportButton({ analysis }: DownloadReportButtonP
       gap(4);
 
       // Plain English box
+      if (analysis.plainEnglishSummary) {
       doc.setFillColor(...C.card);
       const peLines = doc.splitTextToSize(analysis.plainEnglishSummary, usable - 12);
       const peH = peLines.length * 4.2 + 12;
@@ -164,6 +191,7 @@ export default function DownloadReportButton({ analysis }: DownloadReportButtonP
       txt(analysis.plainEnglishSummary, 8.5, false, C.text, margin + 7, usable - 10);
       y += 6;
       gap(4);
+      }
 
       // Red Flags on cover
       if (analysis.redFlags?.length) {
@@ -209,19 +237,20 @@ export default function DownloadReportButton({ analysis }: DownloadReportButtonP
           // Clause number + title
           doc.setFontSize(7.5); doc.setTextColor(...C.subtle); doc.setFont('helvetica', 'bold');
           doc.text(`${String(i + 1).padStart(2, '0')}`, margin, y);
-          const cTitleLines = doc.splitTextToSize(clause.clauseTitle, usable - 22);
+          const cTitleLines = doc.splitTextToSize(clause.clauseTitle || `Clause ${i + 1}`, usable - 22);
           doc.setFontSize(10); doc.setTextColor(...C.text); doc.setFont('helvetica', 'bold');
           doc.text(cTitleLines, margin + 8, y);
 
           // Score
-          doc.setFontSize(14); doc.setTextColor(...scoreColor(clause.riskScore)); doc.setFont('helvetica', 'bold');
-          doc.text(`${clause.riskScore}`, W - margin, y, { align: 'right' });
+          const clauseScore = Math.round(Number(clause.riskScore) || 0);
+          doc.setFontSize(14); doc.setTextColor(...scoreColor(clauseScore)); doc.setFont('helvetica', 'bold');
+          doc.text(`${clauseScore}`, W - margin, y, { align: 'right' });
           doc.setFontSize(6); doc.setTextColor(...C.muted); doc.setFont('helvetica', 'normal');
           doc.text('/100', W - margin, y + 4, { align: 'right' });
           y += cTitleLines.length * 4.8 + 3;
 
           // Severity tag
-          doc.setFontSize(7.5); doc.setTextColor(...scoreColor(clause.riskScore)); doc.setFont('helvetica', 'bold');
+          doc.setFontSize(7.5); doc.setTextColor(...scoreColor(clauseScore)); doc.setFont('helvetica', 'bold');
           doc.text(`[${clause.severity}]`, margin + 8, y);
           if (clause.category) {
             doc.setTextColor(...C.muted); doc.setFont('helvetica', 'normal');
@@ -286,12 +315,12 @@ export default function DownloadReportButton({ analysis }: DownloadReportButtonP
           doc.setFillColor(...pc);
           doc.rect(margin, y - 1, 3, 1.5, 'F');
 
-          const askLines = doc.splitTextToSize(item.ask, usable - 28);
+          const askLines = doc.splitTextToSize(item.ask || '', usable - 28);
           doc.setFontSize(9.5); doc.setTextColor(...C.text); doc.setFont('helvetica', 'bold');
           doc.text(askLines, margin + 6, y);
           // Priority label (right)
           doc.setFontSize(7.5); doc.setTextColor(...pc); doc.setFont('helvetica', 'bold');
-          doc.text(item.priority, W - margin, y, { align: 'right' });
+          doc.text(item.priority || '', W - margin, y, { align: 'right' });
           y += askLines.length * 4.5 + 2;
 
           txt(item.reason, 8.5, false, C.muted, margin + 6, usable - 10);
@@ -364,7 +393,7 @@ export default function DownloadReportButton({ analysis }: DownloadReportButtonP
       doc.text('nyaysaathi.in  |  Know Before You Sign', W - margin, y, { align: 'right' });
 
       // Page numbers on every page
-      const totalPages = (doc as any).internal.getNumberOfPages();
+      const totalPages = doc.getNumberOfPages();
       for (let p = 1; p <= totalPages; p++) {
         doc.setPage(p);
         doc.setFillColor(...C.indigo);
@@ -373,7 +402,7 @@ export default function DownloadReportButton({ analysis }: DownloadReportButtonP
         doc.text(`Page ${p} of ${totalPages}`, W / 2, H - 4, { align: 'center' });
       }
 
-      doc.save(`NyaySaathi_${analysis.title.replace(/[^a-zA-Z0-9]/g, '_').slice(0, 40)}.pdf`);
+      doc.save(`NyaySaathi_${(analysis.title || 'Report').replace(/[^a-zA-Z0-9]/g, '_').slice(0, 40)}.pdf`);
       toast.success('Report downloaded!');
     } catch (err) {
       console.error('PDF error:', err);

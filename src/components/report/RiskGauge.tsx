@@ -1,5 +1,4 @@
 'use client';
-import { useEffect, useRef } from 'react';
 import { getRiskGaugeColor } from '@/lib/utils';
 
 interface RiskGaugeProps {
@@ -8,9 +7,11 @@ interface RiskGaugeProps {
 }
 
 export default function RiskGauge({ score, size = 160 }: RiskGaugeProps) {
-  const clampedScore = Math.max(0, Math.min(100, score));
-  const radius = 54;
+  const clampedScore = Math.round(Math.max(0, Math.min(100, Number(score) || 0)));
   const stroke = 10;
+  // Must match the arc drawn below (from x=stroke to x=size-stroke); a fixed radius made the
+  // dash length wrong, so a score of 0 still showed a sliver and 100 never filled the arc
+  const radius = (size - stroke * 2) / 2;
   const circumference = Math.PI * radius; // half circle
   const progress = ((100 - clampedScore) / 100) * circumference;
   const color = getRiskGaugeColor(clampedScore);

@@ -1,5 +1,5 @@
 'use client';
-import { useState, useRef, useEffect } from 'react';
+import { useState, useRef } from 'react';
 import { motion } from 'framer-motion';
 import { useAuth } from '@/hooks/useAuth';
 import { useUserProfile } from '@/hooks/useUserProfile';
@@ -10,6 +10,20 @@ import { toast } from 'sonner';
 import { Camera, Save, Lock, User, MapPin, Briefcase, Key, CheckCircle, Globe, Eye, EyeOff } from 'lucide-react';
 import { USER_TYPES, PREFERRED_LANGUAGES, INDIAN_STATES } from '@/lib/constants';
 import PasswordChecklist from '@/components/auth/PasswordChecklist';
+import { changePasswordSchema } from '@/lib/validations/auth';
+import type { PreferredLanguage, UserType } from '@/types/user';
+
+type ProfileForm = {
+  name: string;
+  bio: string;
+  city: string;
+  state: string;
+  userType: string;
+  preferredLanguage: string;
+};
+
+const firebaseErrorCode = (err: unknown): string =>
+  typeof err === 'object' && err !== null && 'code' in err ? String((err as { code: unknown }).code) : '';
 
 const fadeUp = (delay = 0) => ({
   initial: { opacity: 0, y: 16 },
@@ -62,27 +76,22 @@ function AccountContent() {
   const [changingPw, setChangingPw] = useState(false);
   const [pwSuccess, setPwSuccess] = useState(false);
 
-  const [formData, setFormData] = useState({
-    name: '',
-    bio: '',
-    city: '',
-    state: '',
-    userType: 'Other',
-    preferredLanguage: 'English',
-  });
+  // null until the user edits something; until then the form shows the saved profile.
+  // (Previously an effect copied the profile into the form whenever it changed, which
+  // wiped unsaved edits as soon as a new photo was uploaded.)
+  const [edits, setEdits] = useState<ProfileForm | null>(null);
+  const formData: ProfileForm = edits ?? {
+    name: user?.displayName || profile?.name || '',
+    bio: profile?.bio || '',
+    city: profile?.city || '',
+    state: profile?.state || '',
+    userType: profile?.userType || 'Other',
+    preferredLanguage: profile?.preferredLanguage || 'English',
+  };
+  const setFormData = (update: (prev: ProfileForm) => ProfileForm) => setEdits(update(formData));
 
-  useEffect(() => {
-    if (user || profile) {
-      setFormData({
-        name: user?.displayName || profile?.name || '',
-        bio: profile?.bio || '',
-        city: profile?.city || '',
-        state: profile?.state || '',
-        userType: profile?.userType || 'Other',
-        preferredLanguage: profile?.preferredLanguage || 'English',
-      });
-    }
-  }, [user, profile]);
+  // Google-only accounts have no password to change
+  const hasPassword = user?.providerData.some((p) => p.providerId === 'password') ?? false;
 
   const compressAndConvertToBase64 = (file: File): Promise<string> => {
     return new Promise((resolve, reject) => {
@@ -124,10 +133,11 @@ function AccountContent() {
 
   const handleAvatarUpload = async (e: React.ChangeEvent<HTMLInputElement>) => {
     const file = e.target.files?.[0];
-    if (!file || !user) return;
-    if (file.size > 5 * 1024 * 1024) { toast.error('Image must be under 5MB'); return; }
     // Reset input so the same file can be re-selected after an error
     e.target.value = '';
+    if (!file || !user) return;
+    if (!file.type.startsWith('image/')) { toast.error('Please choose an image file'); return; }
+    if (file.size > 5 * 1024 * 1024) { toast.error('Image must be under 5MB'); return; }
     setUploading(true);
 
     try {
@@ -159,7 +169,11 @@ function AccountContent() {
     setSaving(true);
     try {
       await updateAuthProfile(user, { displayName: formData.name });
-      await saveProfile({ name: formData.name, bio: formData.bio, city: formData.city, state: formData.state, userType: formData.userType as any, preferredLanguage: formData.preferredLanguage as any });
+      await saveProfile({
+        name: formData.name, bio: formData.bio, city: formData.city, state: formData.state,
+        userType: formData.userType as UserType, preferredLanguage: formData.preferredLanguage as PreferredLanguage,
+      });
+      setEdits(null);
       toast.success('Profile saved successfully!');
     } catch { toast.error('Failed to save — try again'); }
     finally { setSaving(false); }
@@ -167,8 +181,9 @@ function AccountContent() {
 
   const handleChangePassword = async () => {
     if (!user || !user.email) return;
-    if (newPw !== confirmPw) { toast.error('Passwords do not match'); return; }
-    if (newPw.length < 8) { toast.error('Password must be at least 8 characters'); return; }
+    // Same rules as sign-up (uppercase, lowercase, number, special character, 8+ chars)
+    const check = changePasswordSchema.safeParse({ currentPassword: currentPw, newPassword: newPw, confirmNewPassword: confirmPw });
+    if (!check.success) { toast.error(check.error.issues[0]?.message ?? 'Invalid password'); return; }
     setChangingPw(true);
     try {
       await changeUserPassword(user, currentPw, newPw);
@@ -176,8 +191,13 @@ function AccountContent() {
       setPwSuccess(true);
       setCurrentPw(''); setNewPw(''); setConfirmPw('');
       setTimeout(() => setPwSuccess(false), 3000);
-    } catch (err: any) {
-      toast.error(err.message?.includes('invalid-credential') ? 'Current password is incorrect' : 'Failed to change password');
+    } catch (err) {
+      const code = firebaseErrorCode(err);
+      toast.error(
+        code === 'auth/invalid-credential' || code === 'auth/wrong-password' ? 'Current password is incorrect'
+          : code === 'auth/too-many-requests' ? 'Too many attempts. Please wait a few minutes and try again.'
+          : 'Failed to change password',
+      );
     } finally { setChangingPw(false); }
   };
 
@@ -295,7 +315,7 @@ function AccountContent() {
               </div>
 
               {/* City + State */}
-              <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '1rem' }}>
+              <div className="grid-2-col" style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '1rem' }}>
                 <div>
                   <label style={labelStyle}>City</label>
                   <input
@@ -319,7 +339,7 @@ function AccountContent() {
               </div>
 
               {/* User Type + Language */}
-              <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '1rem' }}>
+              <div className="grid-2-col" style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '1rem' }}>
                 <div>
                   <label style={labelStyle}>I am a...</label>
                   <select
@@ -359,7 +379,7 @@ function AccountContent() {
           </motion.div>
 
           {/* ── Change Password ──────────────────────────── */}
-          {user?.email && (
+          {user?.email && hasPassword && (
             <motion.div {...fadeUp(0.17)} className="glass-card" style={{ padding: '2rem' }}>
               <div style={sectionHeaderStyle}>
                 <div style={{ width: 32, height: 32, borderRadius: 9, background: 'rgba(244,63,94,0.12)', border: '1px solid rgba(244,63,94,0.25)', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>

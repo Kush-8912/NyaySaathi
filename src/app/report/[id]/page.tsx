@@ -156,7 +156,11 @@ function ReportContent() {
             }}>
               <DownloadReportButton analysis={a} />
               <button
-                onClick={() => { navigator.clipboard.writeText(a.plainEnglishSummary); toast.success('Summary copied!'); }}
+                onClick={() => {
+                  navigator.clipboard.writeText(a.plainEnglishSummary || a.summary)
+                    .then(() => toast.success('Summary copied!'))
+                    .catch(() => toast.error('Could not copy — your browser blocked clipboard access.'));
+                }}
                 className="btn-ghost"
                 style={{ display: 'flex', alignItems: 'center', gap: '0.4rem', padding: '0.55rem 1.1rem', borderRadius: 10, fontSize: '0.875rem' }}
               >
@@ -169,6 +173,12 @@ function ReportContent() {
         {/* ── Sections ────────────────────────────────── */}
         <div style={{ display: 'flex', flexDirection: 'column', gap: '1.25rem' }}>
 
+          {a.truncated && (
+            <div role="note" style={{ background: 'rgba(249,115,22,0.06)', border: '1px solid rgba(249,115,22,0.25)', borderRadius: 12, padding: '0.9rem 1.25rem', fontSize: '0.85rem', color: 'var(--text-secondary)', lineHeight: 1.6 }}>
+              <strong style={{ color: '#FB923C' }}>Partial review:</strong> this contract was too long to analyze in full, so only the first part was reviewed. Check the remaining clauses yourself or analyze them separately.
+            </div>
+          )}
+
           {/* Plain English Summary */}
           <SectionCard title="Plain English Summary" icon={<BookOpen size={16} />} color="#818CF8" id="summary">
             <p style={{ fontSize: '0.9rem', color: 'var(--text-secondary)', lineHeight: 1.75 }}>
@@ -179,7 +189,7 @@ function ReportContent() {
           {/* Key Findings */}
           {(a.redFlags?.length > 0 || a.greenFlags?.length > 0) && (
             <SectionCard title="Key Findings" icon={<Eye size={16} />} color="#FB923C">
-              <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '1rem' }}>
+              <div className="grid-2-col" style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '1rem' }}>
                 {a.redFlags?.length > 0 && (
                   <div style={{ background: 'rgba(239,68,68,0.05)', border: '1px solid rgba(239,68,68,0.15)', borderRadius: 10, padding: '1rem' }}>
                     <p style={{ fontSize: '0.75rem', fontWeight: 700, color: '#F87171', letterSpacing: '0.07em', textTransform: 'uppercase', marginBottom: '0.75rem', display: 'flex', alignItems: 'center', gap: '0.4rem' }}>
@@ -215,7 +225,7 @@ function ReportContent() {
           {/* Obligations & Rights */}
           {(a.obligationsAcceptedByUser?.length > 0 || a.rightsGivenAway?.length > 0) && (
             <SectionCard title="What You're Agreeing To" icon={<Scale size={16} />} color="#60A5FA">
-              <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '1rem' }}>
+              <div className="grid-2-col" style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '1rem' }}>
                 {a.obligationsAcceptedByUser?.length > 0 && (
                   <div style={{ background: 'rgba(249,115,22,0.05)', border: '1px solid rgba(249,115,22,0.15)', borderRadius: 10, padding: '1rem' }}>
                     <p style={{ fontSize: '0.7rem', fontWeight: 700, color: '#FB923C', letterSpacing: '0.07em', textTransform: 'uppercase', marginBottom: '0.75rem' }}>Obligations You Accept</p>
@@ -247,7 +257,7 @@ function ReportContent() {
           {/* Missing Protections */}
           {a.missingProtections?.length > 0 && (
             <SectionCard title="Missing Protections" icon={<Lock size={16} />} color="#FACC15">
-              <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '0.6rem' }}>
+              <div className="grid-2-col" style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '0.6rem' }}>
                 {a.missingProtections.map((m, i) => (
                   <div key={i} style={{ display: 'flex', gap: '0.5rem', fontSize: '0.83rem', color: 'var(--text-secondary)', lineHeight: 1.6 }}>
                     <span style={{ color: '#FACC15', flexShrink: 0 }}>⚠</span> {m}

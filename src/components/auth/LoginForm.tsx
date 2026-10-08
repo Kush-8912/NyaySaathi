@@ -6,6 +6,7 @@ import { useForm } from 'react-hook-form';
 import { zodResolver } from '@hookform/resolvers/zod';
 import { loginSchema, type LoginInput } from '@/lib/validations/auth';
 import { loginWithEmail } from '@/lib/firebase/auth';
+import { authErrorMessage } from '@/lib/firebase/authErrors';
 import { toast } from 'sonner';
 import { Eye, EyeOff, Mail, Lock } from 'lucide-react';
 import Link from 'next/link';
@@ -27,9 +28,7 @@ export default function LoginForm() {
       toast.success('Welcome back! Great to see you again.');
       router.push('/dashboard');
     } catch (err: unknown) {
-      const msg = err instanceof Error && err.message.includes('invalid-credential')
-        ? 'Invalid email or password.' : 'Login failed. Please try again.';
-      toast.error(msg);
+      toast.error(authErrorMessage(err, 'Login failed. Please try again.'));
     }
   };
 
